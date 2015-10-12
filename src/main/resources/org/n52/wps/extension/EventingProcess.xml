@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wps:ProcessDescriptions xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ows="http://www.opengis.net/ows/1.1" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_response.xsd" xml:lang="en-US" service="WPS" version="1.0.0">
+  <ProcessDescription statusSupported="true" storeSupported="true" wps:processVersion="1.1.0">
+    <ows:Identifier>org.n52.wps.extension.EventingProcess</ows:Identifier>
+    <ows:Title>IMIS IoT pilot eventing process</ows:Title>
+    <DataInputs>
+      <Input minOccurs="1" maxOccurs="1">
+        <ows:Identifier>notification-rule</ows:Identifier>
+        <ows:Title>EML rule for the event processing</ows:Title>
+        <ComplexData>
+          <Default>
+            <Format>
+              <MimeType>text/xml</MimeType>
+<!--               <Schema>http://eml-schema...</Schema> -->
+            </Format>
+          </Default>
+          <Supported>
+            <Format>
+              <MimeType>text/xml</MimeType>
+<!--               <Schema>http://eml-schema...</Schema> -->
+            </Format>
+          </Supported>
+        </ComplexData>
+      </Input>
+      <Input minOccurs="1" maxOccurs="1">
+        <ows:Identifier>getobservation-template</ows:Identifier>
+        <ows:Title>GetObservation template for SOS importer</ows:Title>
+        <ComplexData>
+          <Default>
+            <Format>
+              <MimeType>text/xml</MimeType>
+              <Schema>http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd</Schema>
+            </Format>
+          </Default>
+          <Supported>
+            <Format>
+              <MimeType>text/xml</MimeType>
+              <Schema>http://schemas.opengis.net/sos/1.0.0/sosGetObservation.xsd</Schema>
+            </Format>
+            <Format>
+              <MimeType>text/xml</MimeType>
+              <Schema>http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd</Schema>
+            </Format>
+          </Supported>
+        </ComplexData>
+      </Input>
+      <Input minOccurs="1" maxOccurs="1">
+        <ows:Identifier>notification-endpoint</ows:Identifier>
+        <ows:Title>width</ows:Title>
+        <LiteralData>
+          <ows:DataType ows:reference="xs:uri"/>
+          <ows:AnyValue/>
+        </LiteralData>
+      </Input>
+    </DataInputs>
+    <ProcessOutputs>
+      <Output>
+        <ows:Identifier>notification-endpoint</ows:Identifier>
+        <ows:Title>notification-endpoint</ows:Title>
+        <LiteralOutput>
+          <ows:DataType ows:reference="xs:uri"/>
+        </LiteralOutput>
+      </Output>
+    </ProcessOutputs>
+  </ProcessDescription>
+</wps:ProcessDescriptions>
