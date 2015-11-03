@@ -67,7 +67,7 @@ public class EventingProcess extends AbstractAlgorithm{
         
         return result;
     }
-
+    
     private Rule registerRule(XmlObject xmlObject) throws PassiveFilterAlreadyPresentException, FilterInstantiationException, XmlException, IOException {
             Rule rule = createBasicRule();
             rule.setPassiveFilter((PassiveFilter)
