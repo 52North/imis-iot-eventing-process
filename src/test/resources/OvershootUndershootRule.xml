@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EML xmlns="http://www.opengis.net/eml/0.0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://www.opengis.net/eml/0.0.1 3111_XSDeml0.0.1OGC-EML-0_0_1-eml.xsd">
+    <SimplePatterns>
+        <SimplePattern inputName="input" patternID="Overshoot_Stream">
+            <SelectFunctions>
+                <SelectFunction createCausality="false" newEventName="Overshoot_Event">
+                    <SelectEvent eventName="input" />
+                </SelectFunction>
+            </SelectFunctions>
+            <View>
+                <LengthView>
+                    <EventCount>1</EventCount>
+                </LengthView>
+            </View>
+            <Guard>
+                <fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0">
+                    <fes:PropertyIsGreaterThan>
+                        <fes:ValueReference>input/doubleValue</fes:ValueReference>
+                        <fes:Literal>15</fes:Literal>
+                    </fes:PropertyIsGreaterThan>
+                </fes:Filter>
+            </Guard>
+            <PropertyRestrictions>
+                <PropertyRestriction>
+                    <name>observedProperty</name>
+                    <value>AirTemperature</value>
+                </PropertyRestriction>
+                <PropertyRestriction>
+                    <name>sensorID</name>
+                    <value>ws2500</value>
+                </PropertyRestriction>
+            </PropertyRestrictions>
+        </SimplePattern>
+        <SimplePattern inputName="input" patternID="Undershoot_Stream">
+            <SelectFunctions>
+                <SelectFunction createCausality="false" newEventName="Undershoot_Event">
+                    <SelectEvent eventName="input" />
+                </SelectFunction>
+            </SelectFunctions>
+            <View>
+                <LengthView>
+                    <EventCount>1</EventCount>
+                </LengthView>
+            </View>
+            <Guard>
+                <fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0">
+                    <fes:PropertyIsLessThanOrEqualTo>
+                        <fes:ValueReference>input/doubleValue</fes:ValueReference>
+                        <fes:Literal>15</fes:Literal>
+                    </fes:PropertyIsLessThanOrEqualTo>
+                </fes:Filter>
+            </Guard>
+            <PropertyRestrictions>
+                <PropertyRestriction>
+                    <name>observedProperty</name>
+                    <value>AirTemperature</value>
+                </PropertyRestriction>
+                <PropertyRestriction>
+                    <name>sensorID</name>
+                    <value>ws2500</value>
+                </PropertyRestriction>
+            </PropertyRestrictions>
+        </SimplePattern>
+    </SimplePatterns>
+    <ComplexPatterns>
+        <!-- Einstiegsklausel -->
+        <ComplexPattern
+            patternID="Overshoot_External_Output">
+            <SelectFunctions>
+                <SelectFunction createCausality="true" newEventName="Overshoot_External_Output" outputName="Overshoot_External_Output_Exit">
+                    <SelectEvent eventName="Overshoot_Event" />
+                </SelectFunction>
+            </SelectFunctions>
+            <StructuralOperator>
+                <BEFORE />
+            </StructuralOperator>
+            <FirstPattern>
+                <PatternReference>Undershoot_Stream</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </FirstPattern>
+            <SecondPattern>
+                <PatternReference>Overshoot_Stream</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </SecondPattern>
+        </ComplexPattern>
+        <ComplexPattern patternID="Undershoot_External_Output">
+            <SelectFunctions>
+                <SelectFunction createCausality="true" newEventName="Undershoot_External_Output" outputName="Undershoot_External_Output_Exit">
+                    <SelectEvent eventName="Undershoot_Event" />
+                </SelectFunction>
+            </SelectFunctions>
+            <StructuralOperator>
+                <BEFORE />
+            </StructuralOperator>
+            <FirstPattern>
+                <PatternReference>Overshoot_Stream</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </FirstPattern>
+            <SecondPattern>
+                <PatternReference>Undershoot_Stream</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </SecondPattern>
+        </ComplexPattern>
+    </ComplexPatterns>
+    <TimerPatterns />
+    <RepetitivePatterns />
+</EML>
