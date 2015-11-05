@@ -8,7 +8,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 /**
- * TODO JavaDoc
+ * Constants for RSS serialization.
  *
  * @author Christian Autermann
  */

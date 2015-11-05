@@ -17,8 +17,6 @@ import org.n52.wps.extension.rss.RssFeed;
 import javanet.staxutils.IndentingXMLStreamWriter;
 
 /**
- * TODO JavaDoc
- *
  * @author Christian Autermann
  */
 public class RssFeedEncoderTest {

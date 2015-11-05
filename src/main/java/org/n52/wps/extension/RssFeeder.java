@@ -71,6 +71,8 @@ public class RssFeeder implements Runnable {
         while (true) {
             try {
                 RssFeed feed = createFeed(this.events.take());
+                // FIXME change the endpoint URI by appending /InsertRSS
+                // FIXME check if this does actually work. Farzad wrote something about a "params" parameter
                 try (final OutputStream out = this.client.post(endpoint, RSS_MEDIA_TYPE)) {
                     this.feedEncoder.encodeDocument(feed, out);
                 }
@@ -126,7 +128,7 @@ public class RssFeeder implements Runnable {
         double overshoot = 2.0;
         double value = 3.0;
         double undershoot = 1.0;
-        // TODO get these hardcoded values from the event, once it arrives
+        // FIXME get these hardcoded values from the event, once it arrives
         String featureOfInterest = "featureOfInterest";
         String description = "description";
         String procedudure = "procedudure";
