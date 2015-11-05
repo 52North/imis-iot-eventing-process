@@ -46,8 +46,8 @@
                 <ows:Identifier>runtime</ows:Identifier>
                 <ows:Title>Process Runtime</ows:Title>
                 <ows:Abstract>
-                    The maximum runtime of this process. It defaults to -1 which
-                    means this process runs indefinitely.
+                    The maximum runtime of this process (in ms). It defaults to 
+                    -1 which means this process runs indefinitely.
                 </ows:Abstract>
                 <LiteralData>
                     <ows:DataType ows:reference="xs:long"/>
