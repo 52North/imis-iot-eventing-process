@@ -27,9 +27,11 @@ import org.n52.epos.rules.PassiveFilterAlreadyPresentException;
 import org.n52.epos.rules.Rule;
 import org.n52.wps.extension.rss.NotificationRssFeedItem;
 import org.n52.wps.extension.rss.RssFeed;
+import org.n52.wps.extension.rss.RssFeedItem;
 import org.n52.wps.extension.rss.xml.NotificationRssFeedItemEncoder;
 import org.n52.wps.extension.rss.xml.RssFeedEncoder;
 import org.n52.wps.extension.rss.xml.StreamEncoder;
+
 
 /**
  * Component that listens on events produced by the EPOS engine.
@@ -38,10 +40,10 @@ import org.n52.wps.extension.rss.xml.StreamEncoder;
  */
 public class RssFeeder implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(RssFeeder.class);
-    private static final String RSS_MEDIA_TYPE = "application/rss+xml";
+    private static final String RSS_MEDIA_TYPE = "application/xml";
     private final URL endpoint;
-    private final BlockingQueue<EposEvent> events;
-    private final StreamEncoder<RssFeed> feedEncoder;
+    private final BlockingQueue<EposEvent> events = new LinkedBlockingQueue<>();
+    private final StreamEncoder<RssFeed> feedEncoder = new RssFeedEncoder(new NotificationRssFeedItemEncoder());
     private final HttpClient client;
 
     /**
@@ -58,10 +60,11 @@ public class RssFeeder implements Runnable {
      */
     public RssFeeder(XmlObject xmlRule, URI rssEndpoint, HttpClient client)
             throws FilterInstantiationException, MalformedURLException {
-        this.feedEncoder
-                = new RssFeedEncoder(new NotificationRssFeedItemEncoder());
-        this.events = new LinkedBlockingQueue<>();
-        this.endpoint = rssEndpoint.toURL();
+        URL url = rssEndpoint.toURL();
+        this.endpoint = new URL(url.getProtocol(),
+                                url.getHost(),
+                                url.getPort(),
+                                url.getPath() + "/InsertRSS");
         this.client = Objects.requireNonNull(client);
         EposEngine.getInstance().registerRule(createRule(xmlRule));
     }
@@ -70,7 +73,8 @@ public class RssFeeder implements Runnable {
     public void run() {
         while (true) {
             try {
-                RssFeed feed = createFeed(this.events.take());
+                EposEvent event = this.events.take();
+                RssFeed feed = createFeed(event);
                 // FIXME change the endpoint URI by appending /InsertRSS
                 // FIXME check if this does actually work. Farzad wrote something about a "params" parameter
                 try (final OutputStream out = this.client.post(endpoint, RSS_MEDIA_TYPE)) {
@@ -124,6 +128,25 @@ public class RssFeeder implements Runnable {
      */
     private RssFeed createFeed(EposEvent event)
             throws MalformedURLException {
+        // TODO are these fixed values?
+        String feedDescription = "SOS-Event WPS feeder - alert updates";
+        String feedTitle = "SOS-Event WPS feeder";
+        DateTime time = new DateTime(event.getStartTime());
+        RssFeed feed = new RssFeed(feedTitle, this.endpoint, feedDescription, time, createFeedItem(event));
+        return feed;
+    }
+
+    /**
+     * Create a RSS feed item from the supplied {@code event}.
+     *
+     * @param event the event
+     *
+     * @return the RSS feed item
+     *
+     * @throws MalformedURLException if the GUID/link could not be generated
+     */
+    private RssFeedItem createFeedItem(EposEvent event)
+            throws MalformedURLException {
         DateTime time = new DateTime(event.getStartTime());
         double overshoot = 2.0;
         double value = 3.0;
@@ -135,12 +158,9 @@ public class RssFeeder implements Runnable {
         String category = "category";
         String title = "title";
         String observedProperty = "observedProperty";
-        String feedDescription = "SOS-Event WPS feeder - alert updates";
-        String feedTitle = "SOS-Event WPS feeder";
-        RssFeed feed = new RssFeed(feedTitle, this.endpoint, feedDescription, time);
         URL guid = new URL(this.endpoint.toString() + "/#alert=" + String.valueOf(time.getMillis()));
-        feed.addItem(new NotificationRssFeedItem(title, guid, category, description, time, guid.toString(), procedudure, observedProperty, featureOfInterest, undershoot, overshoot, value));
-        return feed;
+        return new NotificationRssFeedItem(title, guid, category, description,
+                time, guid.toString(), procedudure, observedProperty,
+                featureOfInterest, undershoot, overshoot, value);
     }
-
 }

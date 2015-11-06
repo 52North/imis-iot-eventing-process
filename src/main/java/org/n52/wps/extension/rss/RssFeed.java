@@ -4,9 +4,11 @@ import static com.google.common.base.Strings.emptyToNull;
 import static java.util.Objects.requireNonNull;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
@@ -40,6 +42,25 @@ public class RssFeed {
         this.link = requireNonNull(link);
         this.description = requireNonNull(emptyToNull(description));
         this.date = requireNonNull(date);
+    }
+
+    /**
+     * Creates a new {@code RssFeed} with the supplied items.
+     * @param title the title
+     * @param link the link
+     * @param description the description
+     * @param date the publication date
+     * @param items  the
+     * * @throws NullPointerException if any of the parameters is {@code null} or
+     *                              an empty string
+     */
+    public RssFeed(String title, URL link, String description, DateTime date, RssFeedItem... items) {
+        this(title, link, description, date);
+        Arrays.stream(items)
+                .map(Optional::ofNullable)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .forEach(this.items::add);
     }
 
     /**
