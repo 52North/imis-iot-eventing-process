@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
+import net.opengis.om.x20.OMObservationType;
 import net.opengis.sos.x20.GetObservationResponseType.ObservationData;
 
 import org.apache.xmlbeans.XmlException;
@@ -51,20 +52,13 @@ public class SesFeeder implements Runnable {
             DateTime end = DateTime.now();
             this.last = end;
             try {
-                Arrays.stream(this.client.getObservation(begin, end)
-                        .getGetObservationResponse().getObservationDataArray())
+                ObservationData[] observationData = this.client
+                        .getObservations(begin, end)
+                        .getGetObservationResponse()
+                        .getObservationDataArray();
+                Arrays.stream(observationData)
                         .map(ObservationData::getOMObservation)
-                        .forEach((net.opengis.om.x20.OMObservationType xml) -> {
-                    LOG.info("pushing xml {}", xml);
-                    try {
-                        EposEvent event
-                                = TransformationRepository.Instance.transform(xml, EposEvent.class);
-                        LOG.info("created event {}", event);
-                        EposEngine.getInstance().filterEvent(event);
-                    } catch (TransformationException ex) {
-                        LOG.error("TransformationException", ex);
-                    }
-                });
+                        .forEach(this::postEvent);
                 try {
                     // TODO maybe use a Timer for this
                     // wait for the specified time span
@@ -81,6 +75,22 @@ public class SesFeeder implements Runnable {
                 LOG.error("XmlException", ex);
             }
         }
+    }
+
+    private void postEvent(OMObservationType xml) {
+        LOG.info("pushing xml {}", xml);
+        try {
+            EposEvent event = createEvent(xml);
+            LOG.info("created event {}", event);
+            EposEngine.getInstance().filterEvent(event);
+        } catch (TransformationException ex) {
+            LOG.error("TransformationException", ex);
+        }
+    }
+
+    private EposEvent createEvent(OMObservationType xml)
+            throws TransformationException {
+        return TransformationRepository.Instance.transform(xml, EposEvent.class);
     }
 
 }

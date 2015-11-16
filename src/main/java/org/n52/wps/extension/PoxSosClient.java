@@ -75,7 +75,7 @@ public class PoxSosClient implements SosClient {
     }
 
     @Override
-    public GetObservationResponseDocument getObservation(DateTime begin, DateTime end)
+    public GetObservationResponseDocument getObservations(DateTime begin, DateTime end)
             throws XmlException, IOException {
         GetObservationDocument request = createRequest(begin, end);
         try (InputStream in = client.post(endpoint, request)) {

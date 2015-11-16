@@ -37,9 +37,11 @@ import org.n52.wps.server.ExceptionReport;
  */
 public class EventingProcessTest {
 
-    private static final Answer<InputStream> EMPTY = (x) -> getResource("/EmptyGetObservationResponse.xml");
-    private static final Answer<InputStream> UNDERSHOOT = (x) -> getResource("/UndershootObservation.xml");
-    private static final Answer<InputStream> OVERSHOOT = (x) -> getResource("/OvershootObservation.xml");
+    private static final Answer<InputStream> EMPTY = x -> getResource("/EmptyGetObservationResponse.xml");
+    private static final Answer<InputStream> UNDERSHOOT = x -> getResource("/UndershootObservation.xml");
+    private static final Answer<InputStream> OVERSHOOT = x -> getResource("/OvershootObservation.xml");
+    private static final long POLLING_TIME = 1000L;
+    private static final long RUNTIME = 5000L;
     private @Mock HttpClient client;
     private Map<String, List<IData>> input;
     private EventingProcess eventingProcess;
@@ -49,8 +51,8 @@ public class EventingProcessTest {
         MockitoAnnotations.initMocks(this);
         this.eventingProcess = new EventingProcess(this.client);
         this.input = new HashMap<>(7);
-        this.input.put(EventingProcess.SAMPLING_RATE_INPUT, createLongInput(1000L));
-        this.input.put(EventingProcess.RUNTIME_INPUT, createLongInput(5000L));
+        this.input.put(EventingProcess.SAMPLING_RATE_INPUT, createLongInput(POLLING_TIME));
+        this.input.put(EventingProcess.RUNTIME_INPUT, createLongInput(RUNTIME));
         this.input.put(EventingProcess.RSS_ENDPOINT_INPUT, createURIInput("http://localhost/rss"));
         this.input.put(EventingProcess.SOS_ENDPOINT_INPUT, createURIInput("http://localhost/sos"));
         this.input.put(EventingProcess.POX_GET_OBSERVATION_TEMPLATE_INPUT, createXmlInput("/GetObservationRequestTemplate.xml"));
