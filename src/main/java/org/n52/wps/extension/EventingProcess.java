@@ -1,9 +1,12 @@
 package org.n52.wps.extension;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +15,6 @@ import org.apache.xmlbeans.XmlObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.n52.epos.filter.FilterInstantiationException;
 import org.n52.wps.io.data.IData;
 import org.n52.wps.io.data.binding.complex.GenericXMLDataBinding;
 import org.n52.wps.io.data.binding.literal.LiteralAnyURIBinding;
@@ -99,10 +101,21 @@ public class EventingProcess extends ConvenientAbstractAlgorithm {
                 sosClient = new KvpSosClient(this.httpClient, sosEndpoint.toURL());
             }
 
+            Thread supervisor = Thread.currentThread();
             // SOS -> EPOS
             Thread sesFeeder = new Thread(new SesFeeder(sosClient, samplingRate));
             // EPOS -> RSS
             Thread rssFeeder = new Thread(new RssFeeder(xmlRule, rssEndpoint, this.httpClient));
+
+            List<Throwable> uncaughtExceptions = Collections.synchronizedList(new LinkedList<>());
+
+            UncaughtExceptionHandler eh = (t, e) -> {
+                uncaughtExceptions.add(e);
+                supervisor.interrupt();
+            };
+
+            rssFeeder.setUncaughtExceptionHandler(eh);
+            sesFeeder.setUncaughtExceptionHandler(eh);
 
             rssFeeder.start();
             sesFeeder.start();
@@ -158,9 +171,14 @@ public class EventingProcess extends ConvenientAbstractAlgorithm {
                 }
             }
 
-            return createResultMap(rssEndpoint);
+            synchronized(uncaughtExceptions) {
+                if (!uncaughtExceptions.isEmpty()) {
+                    throw unknownError(uncaughtExceptions.iterator().next());
+                }
+            }
 
-        } catch (URISyntaxException| MalformedURLException | FilterInstantiationException e) {
+            return createResultMap(rssEndpoint);
+        } catch (URISyntaxException| MalformedURLException e) {
             LOG.error(e.getMessage(), e);
             throw unknownError(e);
         }

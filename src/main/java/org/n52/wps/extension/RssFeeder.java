@@ -1,10 +1,13 @@
 package org.n52.wps.extension;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -32,6 +35,9 @@ import org.n52.wps.extension.rss.xml.NotificationRssFeedItemEncoder;
 import org.n52.wps.extension.rss.xml.RssFeedEncoder;
 import org.n52.wps.extension.rss.xml.StreamEncoder;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.io.CharStreams;
+
 
 /**
  * Component that listens on events produced by the EPOS engine.
@@ -42,10 +48,11 @@ public class RssFeeder implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(RssFeeder.class);
     private static final String RSS_MEDIA_TYPE = "application/xml";
     private final URL endpoint;
+    private final URL insertEndpoint;
     private final BlockingQueue<EposEvent> events = new LinkedBlockingQueue<>();
     private final StreamEncoder<RssFeed> feedEncoder = new RssFeedEncoder(new NotificationRssFeedItemEncoder());
     private final HttpClient client;
-
+    private final XmlObject xmlRule;
     /**
      * Creates a new {@code RssFeeder}.
      *
@@ -53,32 +60,36 @@ public class RssFeeder implements Runnable {
      * @param rssEndpoint the URL to post RSS feeds to
      * @param client      the HTTP client to use
      *
-     * @throws FilterInstantiationException if the {@code EposFilter} could
-     *                                      not instantiated
      * @throws MalformedURLException        if the URI could not be
      *                                      converted to a URL
      */
     public RssFeeder(XmlObject xmlRule, URI rssEndpoint, HttpClient client)
-            throws FilterInstantiationException, MalformedURLException {
+            throws MalformedURLException {
         URL url = rssEndpoint.toURL();
-        this.endpoint = new URL(url.getProtocol(),
-                                url.getHost(),
-                                url.getPort(),
-                                url.getPath() + "/InsertRSS");
+        this.xmlRule = Objects.requireNonNull(xmlRule);
         this.client = Objects.requireNonNull(client);
-        EposEngine.getInstance().registerRule(createRule(xmlRule));
+        this.endpoint = Objects.requireNonNull(url);
+        this.insertEndpoint = new URL(url.getProtocol(),
+                                      url.getHost(),
+                                      url.getPort(),
+                                      url.getPath() + "/InsertRSS");
+        LOG.debug("Endpoint: {}", this.insertEndpoint);
+        LOG.debug("Insertion endpoint: {}", this.insertEndpoint);
     }
 
     @Override
     public void run() {
+
+        try {
+            EposEngine.getInstance().registerRule(createRule(xmlRule));
+        } catch (FilterInstantiationException ex) {
+            LOG.error("Error creating rule", ex);
+        }
+
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 EposEvent event = this.events.take();
-                RssFeed feed = createFeed(event);
-                // FIXME check if this does actually work. Farzad wrote something about a "params" parameter
-                try (OutputStream out = this.client.post(endpoint, RSS_MEDIA_TYPE)) {
-                    this.feedEncoder.encodeDocument(feed, out);
-                }
+                sendNotification(event);
             } catch (InterruptedException ex) {
                 LOG.info("Interrupted", ex);
                 // reset the interrupted state
@@ -88,6 +99,30 @@ public class RssFeeder implements Runnable {
                 // log and continue
                 LOG.error("IOException", ex);
             }
+        }
+    }
+
+    /**
+     * Send the RSS notification for the received event.
+     *
+     * @param event the event
+     *
+     * @throws IOException           if the HTTP call fails
+     * @throws XMLStreamException    if the RSS feed could not be encoded
+     * @throws MalformedURLException if the GUID/link could not be generated
+     */
+    @VisibleForTesting
+    void sendNotification(EposEvent event)
+            throws IOException, XMLStreamException, MalformedURLException {
+        RssFeed feed = createFeed(event);
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        this.feedEncoder.encode(feed, byteArrayOutputStream);
+        String request = byteArrayOutputStream.toString(StandardCharsets.UTF_8.name());
+        // FIXME check if this does actually work. Farzad wrote something about a "params" parameter
+        try (InputStream in = this.client.post(this.insertEndpoint, RSS_MEDIA_TYPE, request)) {
+            String response = CharStreams.toString(new InputStreamReader(in));
+            LOG.info("Inserted notification item: {}", response);
         }
     }
 
@@ -157,9 +192,23 @@ public class RssFeeder implements Runnable {
         String category = "category";
         String title = "title";
         String observedProperty = "observedProperty";
-        URL guid = new URL(this.endpoint.toString() + "/#alert=" + String.valueOf(time.getMillis()));
+        URL guid = createGUID(event);
         return new NotificationRssFeedItem(title, guid, category, description,
                 time, guid.toString(), procedudure, observedProperty,
                 featureOfInterest, undershoot, overshoot, value);
+    }
+
+    /**
+     * Create the GUID of the feed item for the specified event.
+     *
+     * @param event the event
+     *
+     * @return the GUID
+     *
+     * @throws MalformedURLException if the GUID could not be generated
+     */
+    @VisibleForTesting
+    URL createGUID(EposEvent event) throws MalformedURLException {
+        return new URL(this.endpoint.toString() + "/rss/#alert=" + event.getStartTime());
     }
 }

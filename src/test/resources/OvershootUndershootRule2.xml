@@ -1,4 +1,4 @@
-<eml:EML xmlns:eml="http://www.opengis.net/eml/0.0.1" 
+<eml:EML xmlns:eml="http://www.opengis.net/eml/0.0.1"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:fes="http://www.opengis.net/fes/2.0"
          xmlns:swe="http://www.opengis.net/swe/1.0.1">
