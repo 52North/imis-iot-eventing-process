@@ -192,8 +192,6 @@ public class RssFeeder implements Runnable {
 
         DateTime time = new DateTime(event.getStartTime());
 
-        // FIXME get these hardcoded values from the event, once it arrives
-
         @SuppressWarnings("unchecked")
         List<EposEvent> causality = (List<EposEvent>) event.getValue(MapEposEvent.CAUSALITY_KEY);
 
