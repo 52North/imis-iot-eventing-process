@@ -16,7 +16,7 @@
             <om:procedure xlink:href="ws2500" />
             <om:observedProperty xlink:href="AirTemperature" />
             <om:featureOfInterest xlink:href="#ssf_test_feature_7_3" />
-            <om:result uom="deg">10</om:result>
+            <om:result uom="deg">5</om:result>
         </om:OM_Observation>
     </sos:observationData>
 </sos:GetObservationResponse>

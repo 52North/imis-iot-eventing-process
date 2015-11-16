@@ -101,7 +101,7 @@ public abstract class ConvenientAbstractAlgorithm extends AbstractAlgorithm {
      * @return the {@code ExceptionReport}
      */
     protected static ExceptionReport unknownError(Throwable throwable) {
-        return new ExceptionReport("Error executiong process",
+        return new ExceptionReport("Error executing process",
                                    ExceptionReport.NO_APPLICABLE_CODE, throwable);
     }
 }

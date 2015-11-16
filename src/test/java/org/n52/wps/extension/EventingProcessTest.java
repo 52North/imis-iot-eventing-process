@@ -1,15 +1,18 @@
 package org.n52.wps.extension;
 
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +23,8 @@ import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -36,13 +41,15 @@ import org.n52.wps.server.ExceptionReport;
  * @author Christian Autermann
  */
 public class EventingProcessTest {
-
+    private static final Answer<?> SUCCESS_ANSWER
+            = x -> new ByteArrayInputStream("RSS entry with guid http://115.146.93.218:8080/iddss-service/rss/#alert=1447690440619 is successfully stored in the Data Store.".getBytes(StandardCharsets.UTF_8));
     private static final Answer<InputStream> EMPTY = x -> getResource("/EmptyGetObservationResponse.xml");
     private static final Answer<InputStream> UNDERSHOOT = x -> getResource("/UndershootObservation.xml");
     private static final Answer<InputStream> OVERSHOOT = x -> getResource("/OvershootObservation.xml");
     private static final long POLLING_TIME = 1000L;
     private static final long RUNTIME = 5000L;
     private @Mock HttpClient client;
+    private @Captor ArgumentCaptor<String> rss;
     private Map<String, List<IData>> input;
     private EventingProcess eventingProcess;
 
@@ -61,28 +68,27 @@ public class EventingProcessTest {
 
     @Test
     public void test_undershoot_overshoot() throws XmlException, IOException, ExceptionReport {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Mockito.when(client.post(any(URL.class), any(XmlObject.class)))
                 .thenAnswer(UNDERSHOOT)
                 .thenAnswer(OVERSHOOT)
                 .thenAnswer(EMPTY);
-        Mockito.when(client.post(any(URL.class), any(String.class)))
-                .thenReturn(baos);
+        Mockito.when(client.post(any(URL.class), any(String.class), rss.capture())).thenAnswer(SUCCESS_ANSWER);
         this.eventingProcess.run(this.input);
-        assertThat(baos.size(), is(greaterThan(0)));
+        assertThat(rss.getValue(), is(notNullValue()));
+        assertThat(rss.getValue(), not(isEmptyString()));
     }
 
     @Test
     public void test_overshoot_undershoot() throws XmlException, IOException, ExceptionReport {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Mockito.when(client.post(any(URL.class), any(XmlObject.class)))
                 .thenAnswer(OVERSHOOT)
                 .thenAnswer(UNDERSHOOT)
                 .thenAnswer(EMPTY);
-        Mockito.when(client.post(any(URL.class), any(String.class)))
-                .thenReturn(baos);
+        Mockito.when(client.post(any(URL.class), any(String.class), rss.capture()))
+                .thenAnswer(SUCCESS_ANSWER);
         this.eventingProcess.run(this.input);
-        assertThat(baos.size(), is(greaterThan(0)));
+        assertThat(rss.getValue(), is(notNullValue()));
+        assertThat(rss.getValue(), not(isEmptyString()));
     }
 
     private List<IData> createXmlInput(String name) throws IOException, XmlException {

@@ -1,20 +1,20 @@
-<eml:EML xmlns:eml="http://www.opengis.net/eml/0.0.1"
+<EML xmlns:eml="http://www.opengis.net/eml/0.0.1"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns:fes="http://www.opengis.net/fes/2.0"
          xmlns:swe="http://www.opengis.net/swe/1.0.1">
-    <eml:SimplePatterns>
+    <SimplePatterns>
         <!-- input pattern if only one value is in the eventing queue -->
-        <eml:SimplePattern inputName="input" patternID="initial_count">
-            <eml:SelectFunctions>
-                <eml:SelectFunction newEventName="initial_count_stream">
-                    <eml:SelectEvent eventName="input"/>
-                </eml:SelectFunction>
-            </eml:SelectFunctions>
-            <eml:View>
-                <eml:LengthView>
-                    <eml:EventCount>2</eml:EventCount>
-                </eml:LengthView>
-            </eml:View>
+        <SimplePattern inputName="input" patternID="initial_count">
+            <SelectFunctions>
+                <SelectFunction newEventName="initial_count_stream">
+                    <SelectEvent eventName="input"/>
+                </SelectFunction>
+            </SelectFunctions>
+            <View>
+                <LengthView>
+                    <EventCount>2</EventCount>
+                </LengthView>
+            </View>
             <Guard>
                 <fes:Filter>
                     <fes:PropertyIsEqualTo>
@@ -163,16 +163,16 @@
             <StructuralOperator>
                 <BEFORE/>
             </StructuralOperator>
-            <eml:FirstPattern>
-                <eml:PatternReference>rule4_overshoot_stream</eml:PatternReference>
-                <eml:SelectFunctionNumber>0</eml:SelectFunctionNumber>
-            </eml:FirstPattern>
-            <eml:SecondPattern>
-                <eml:PatternReference>rule4_undershoot_stream</eml:PatternReference>
-                <eml:SelectFunctionNumber>0</eml:SelectFunctionNumber>
-            </eml:SecondPattern>
-        </eml:ComplexPattern>
-    </eml:ComplexPatterns>
-    <eml:TimerPatterns/>
-    <eml:RepetitivePatterns/>
-</eml:EML>
+            <FirstPattern>
+                <PatternReference>rule4_overshoot_stream</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </FirstPattern>
+            <SecondPattern>
+                <PatternReference>rule4_undershoot_stream</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </SecondPattern>
+        </ComplexPattern>
+    </ComplexPatterns>
+    <TimerPatterns/>
+    <RepetitivePatterns/>
+</EML>

@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.n52.epos.engine.EposEngine;
 import org.n52.epos.engine.rules.RuleInstance;
 import org.n52.epos.event.EposEvent;
+import org.n52.epos.event.MapEposEvent;
 import org.n52.epos.filter.EposFilter;
 import org.n52.epos.filter.FilterInstantiationException;
 import org.n52.epos.filter.FilterInstantiationRepository;
@@ -38,7 +40,6 @@ import org.n52.wps.extension.rss.xml.StreamEncoder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 
-
 /**
  * Component that listens on events produced by the EPOS engine.
  *
@@ -50,9 +51,11 @@ public class RssFeeder implements Runnable {
     private final URL endpoint;
     private final URL insertEndpoint;
     private final BlockingQueue<EposEvent> events = new LinkedBlockingQueue<>();
-    private final StreamEncoder<RssFeed> feedEncoder = new RssFeedEncoder(new NotificationRssFeedItemEncoder());
+    private final StreamEncoder<RssFeed> feedEncoder
+            = new RssFeedEncoder(new NotificationRssFeedItemEncoder());
     private final HttpClient client;
     private final XmlObject xmlRule;
+
     /**
      * Creates a new {@code RssFeeder}.
      *
@@ -60,8 +63,8 @@ public class RssFeeder implements Runnable {
      * @param rssEndpoint the URL to post RSS feeds to
      * @param client      the HTTP client to use
      *
-     * @throws MalformedURLException        if the URI could not be
-     *                                      converted to a URL
+     * @throws MalformedURLException if the URI could not be
+     *                               converted to a URL
      */
     public RssFeeder(XmlObject xmlRule, URI rssEndpoint, HttpClient client)
             throws MalformedURLException {
@@ -75,16 +78,11 @@ public class RssFeeder implements Runnable {
                                       url.getPath() + "/InsertRSS");
         LOG.debug("Endpoint: {}", this.insertEndpoint);
         LOG.debug("Insertion endpoint: {}", this.insertEndpoint);
+        registerRule();
     }
 
     @Override
     public void run() {
-
-        try {
-            EposEngine.getInstance().registerRule(createRule(xmlRule));
-        } catch (FilterInstantiationException ex) {
-            LOG.error("Error creating rule", ex);
-        }
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
@@ -99,6 +97,14 @@ public class RssFeeder implements Runnable {
                 // log and continue
                 LOG.error("IOException", ex);
             }
+        }
+    }
+
+    private void registerRule() {
+        try {
+            EposEngine.getInstance().registerRule(createRule(xmlRule));
+        } catch (FilterInstantiationException ex) {
+            LOG.error("Error creating rule", ex);
         }
     }
 
@@ -139,8 +145,11 @@ public class RssFeeder implements Runnable {
      */
     private Rule createRule(XmlObject xmlObject)
             throws FilterInstantiationException {
-        Rule rule = new RuleInstance((SimpleRuleListener) (e, o) -> this.events.offer(e));
-        EposFilter instantiate = FilterInstantiationRepository.Instance.instantiate(xmlObject);
+        Rule rule = new RuleInstance((SimpleRuleListener) (e, o) -> this.events
+                .offer(e));
+        EposFilter instantiate = FilterInstantiationRepository.Instance
+                .instantiate(xmlObject);
+
         try {
             rule.setPassiveFilter((PassiveFilter) instantiate);
         } catch (PassiveFilterAlreadyPresentException ex) {
@@ -166,8 +175,7 @@ public class RssFeeder implements Runnable {
         String feedDescription = "SOS-Event WPS feeder - alert updates";
         String feedTitle = "SOS-Event WPS feeder";
         DateTime time = new DateTime(event.getStartTime());
-        RssFeed feed = new RssFeed(feedTitle, this.endpoint, feedDescription, time, createFeedItem(event));
-        return feed;
+        return new RssFeed(feedTitle, this.endpoint, feedDescription, time, createFeedItem(event));
     }
 
     /**
@@ -181,21 +189,47 @@ public class RssFeeder implements Runnable {
      */
     private RssFeedItem createFeedItem(EposEvent event)
             throws MalformedURLException {
+
         DateTime time = new DateTime(event.getStartTime());
-        double overshoot = 2.0;
-        double value = 3.0;
-        double undershoot = 1.0;
+
         // FIXME get these hardcoded values from the event, once it arrives
-        String featureOfInterest = "featureOfInterest";
-        String description = "description";
-        String procedudure = "procedudure";
-        String category = "category";
-        String title = "title";
-        String observedProperty = "observedProperty";
+
+        @SuppressWarnings("unchecked")
+        List<EposEvent> causality = (List<EposEvent>) event.getValue(MapEposEvent.CAUSALITY_KEY);
+
+
+        EposEvent firstEvent = causality.get(0);
+        EposEvent secondEvent = causality.get(1);
+
+        double value1 = (double) firstEvent.getValue(MapEposEvent.DOUBLE_VALUE_KEY);
+        double value2 = (double) secondEvent.getValue(MapEposEvent.DOUBLE_VALUE_KEY);
+
+        double undershoot = Math.min(value1, value2);
+        double overshoot = Math.max(value1, value2);
+        double value = value2;
+
+        String category;
+        String title;
+        String description;
+
+
+        if (value1 < value2) {
+            title = "overshoot notification";
+            description = "Undershoot followed by an overshoot";
+            category = "undershoot_overshoot";
+        } else {
+            title = "undershoot notification";
+            description = "Overshoot followed by an undershoot";
+            category = "overshoot_undershoot";
+        }
+
+        String featureOfInterest = (String) firstEvent.getValue(MapEposEvent.FEATURE_TYPE_KEY);
+        String procedudure = (String) firstEvent.getValue(MapEposEvent.SENSORID_KEY);
+        String observedProperty = (String) firstEvent.getValue(MapEposEvent.OBSERVED_PROPERTY_KEY);
         URL guid = createGUID(event);
         return new NotificationRssFeedItem(title, guid, category, description,
-                time, guid.toString(), procedudure, observedProperty,
-                featureOfInterest, undershoot, overshoot, value);
+                                           time, guid.toString(), procedudure, observedProperty,
+                                           featureOfInterest, undershoot, overshoot, value);
     }
 
     /**
@@ -208,7 +242,9 @@ public class RssFeeder implements Runnable {
      * @throws MalformedURLException if the GUID could not be generated
      */
     @VisibleForTesting
-    URL createGUID(EposEvent event) throws MalformedURLException {
-        return new URL(this.endpoint.toString() + "/rss/#alert=" + event.getStartTime());
+    URL createGUID(EposEvent event)
+            throws MalformedURLException {
+        return new URL(this.endpoint.toString() + "/rss/#alert=" + event
+                       .getStartTime());
     }
 }

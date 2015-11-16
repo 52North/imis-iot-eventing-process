@@ -173,7 +173,10 @@ public class EventingProcess extends ConvenientAbstractAlgorithm {
 
             synchronized(uncaughtExceptions) {
                 if (!uncaughtExceptions.isEmpty()) {
-                    throw unknownError(uncaughtExceptions.iterator().next());
+                    Throwable throwable = uncaughtExceptions.iterator().next();
+                    if (!(throwable instanceof InterruptedException)) {
+                        throw unknownError(throwable);
+                    }
                 }
             }
 
