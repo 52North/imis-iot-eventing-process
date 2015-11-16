@@ -71,20 +71,19 @@ public class RssFeeder implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 EposEvent event = this.events.take();
                 RssFeed feed = createFeed(event);
-                // FIXME change the endpoint URI by appending /InsertRSS
                 // FIXME check if this does actually work. Farzad wrote something about a "params" parameter
-                try (final OutputStream out = this.client.post(endpoint, RSS_MEDIA_TYPE)) {
+                try (OutputStream out = this.client.post(endpoint, RSS_MEDIA_TYPE)) {
                     this.feedEncoder.encodeDocument(feed, out);
                 }
             } catch (InterruptedException ex) {
                 LOG.info("Interrupted", ex);
                 // reset the interrupted state
-                Thread.interrupted();
-                return;
+                Thread.currentThread().interrupt();
+                break;
             } catch (IOException | XMLStreamException ex) {
                 // log and continue
                 LOG.error("IOException", ex);

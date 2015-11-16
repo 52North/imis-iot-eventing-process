@@ -44,7 +44,7 @@ public class SesFeeder implements Runnable {
     public void run() {
         // the first timespan will be from now-samplingrate to now
         this.last = DateTime.now().minus(this.samplingRate);
-        while (true && !Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
             // during is exclusive boundaries, so shift the begin
             // 1ms to the past to get every timestamp exactly one time
             DateTime begin = last.minus(1L);
@@ -72,7 +72,7 @@ public class SesFeeder implements Runnable {
                 } catch (InterruptedException ex) {
                     LOG.info("Interrupted", ex);
                     // reset the interrupted state
-                    Thread.interrupted();
+                    Thread.currentThread().interrupt();
                     break;
                 }
             } catch (IOException ex) {
