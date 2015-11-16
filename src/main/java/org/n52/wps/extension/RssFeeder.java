@@ -116,10 +116,10 @@ public class RssFeeder implements Runnable {
             throws IOException, XMLStreamException, MalformedURLException {
         RssFeed feed = createFeed(event);
 
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        this.feedEncoder.encode(feed, byteArrayOutputStream);
-        String request = byteArrayOutputStream.toString(StandardCharsets.UTF_8.name());
-        // FIXME check if this does actually work. Farzad wrote something about a "params" parameter
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        this.feedEncoder.encode(feed, baos);
+        String request = baos.toString(StandardCharsets.UTF_8.name());
+
         try (InputStream in = this.client.post(this.insertEndpoint, RSS_MEDIA_TYPE, request)) {
             String response = CharStreams.toString(new InputStreamReader(in));
             LOG.info("Inserted notification item: {}", response);
