@@ -27,7 +27,7 @@
                     <value>AirTemperature</value>
                 </PropertyRestriction>
                 <PropertyRestriction>
-                    <name>sensorID</name>
+                    <name>procedure</name>
                     <value>ws2500</value>
                 </PropertyRestriction>
             </PropertyRestrictions>
@@ -57,7 +57,7 @@
                     <value>AirTemperature</value>
                 </PropertyRestriction>
                 <PropertyRestriction>
-                    <name>sensorID</name>
+                    <name>procedure</name>
                     <value>ws2500</value>
                 </PropertyRestriction>
             </PropertyRestrictions>
