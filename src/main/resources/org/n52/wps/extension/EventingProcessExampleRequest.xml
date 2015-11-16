@@ -1,217 +1,144 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<wps:Execute xmlns:wps="http://www.opengis.net/wps/2.0"
-             xmlns:ows="http://www.opengis.net/ows/2.0"
-             xmlns:xlink="http://www.w3.org/1999/xlink"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://www.opengis.net/wps/2.0 http://schemas.opengis.net/wps/2.0/wps.xsd" 
-             service="WPS" version="2.0.0" response="document" mode="async">
-    <ows:Identifier>org.n52.wps.extension.EventingProcess</ows:Identifier>
-    <!--The event notification rule. All elements that must be adjusted are marked with a comment.-->
-    <wps:Input id="notification-rule">
-        <wps:Data mimeType="text/xml">
-            <EML xmlns="http://www.opengis.net/eml/0.0.1" 
-                 xmlns:fes="http://www.opengis.net/fes/2.0"
-                 xmlns:swe="http://www.opengis.net/swe/1.0.1"
-                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-                <SimplePatterns>
-                    <!-- input pattern if only one value is in the eventing queue -->
-                    <SimplePattern inputName="input" patternID="initial_count">
-                        <SelectFunctions>
-                            <SelectFunction newEventName="initial_count_stream">
-                                <SelectEvent eventName="input"/>
-                            </SelectFunction>
-                        </SelectFunctions>
-                        <View>
-                            <LengthView>
-                                <EventCount>2</EventCount>
-                            </LengthView>
-                        </View>
-                        <Guard>
-                            <fes:Filter >
-                                <fes:PropertyIsEqualTo>
-                                    <fes:ValueReference>VIEW_COUNT</fes:ValueReference>
-                                    <fes:Literal >
-                                        <swe:Count >
-                                            <swe:value>1</swe:value>
-                                        </swe:Count>
-                                    </fes:Literal>
-                                </fes:PropertyIsEqualTo>
-                            </fes:Filter>
-                        </Guard>
-                        <PropertyRestrictions>
-                            <PropertyRestriction>
-                                <name>observedProperty</name>
-                                <!--Here you need to insert the name of the observed property which shall be monitored.-->
-                                <value>AirTemperature</value>
-                            </PropertyRestriction>
-                            <PropertyRestriction>
-                                <name>sensorID</name>
-                                <!--Here you need to insert the name of the procedure (sensor) which shall be monitored.-->
-                                <value>ws2500</value>
-                            </PropertyRestriction>
-                        </PropertyRestrictions>
-                    </SimplePattern>
-                    <SimplePattern inputName="input" patternID="rule4_overshoot_stream">
-                        <SelectFunctions>
-                            <SelectFunction newEventName="rule4_overshoot" createCausality="false">
-                                <SelectEvent eventName="input"/>
-                            </SelectFunction>
-                        </SelectFunctions>
-                        <View>
-                            <LengthView>
-                                <EventCount>1</EventCount>
-                            </LengthView>
-                        </View>
-                        <Guard>
-                            <fes:Filter>
-                                <fes:PropertyIsGreaterThan>
-                                    <fes:ValueReference>input/doubleValue</fes:ValueReference>
-                                    <!--  The value at which an alert shall start.-->
-                                    <fes:Literal>30.6</fes:Literal>
-                                </fes:PropertyIsGreaterThan>
-                            </fes:Filter>
-                        </Guard>
-                        <PropertyRestrictions>
-                            <PropertyRestriction>
-                                <name>observedProperty</name>
-                                <!--Here you need to insert the name of the observed property which shall be monitored.-->
-                                <value>AirTemperature</value>
-                            </PropertyRestriction>
-                            <PropertyRestriction>
-                                <name>sensorID</name>
-                                <!--Here you need to insert the name of the observed property which shall be monitored.-->
-                                <value>AirTemperature</value>
-                            </PropertyRestriction>
-                        </PropertyRestrictions>
-                    </SimplePattern>
-                    <SimplePattern inputName="input" patternID="rule4_undershoot_stream">
-                        <SelectFunctions>
-                            <SelectFunction newEventName="rule4_undershoot" createCausality="false">
-                                <SelectEvent eventName="input"/>
-                            </SelectFunction>
-                        </SelectFunctions>
-                        <View>
-                            <LengthView>
-                                <EventCount>1</EventCount>
-                            </LengthView>
-                        </View>
-                        <Guard>
-                            <fes:Filter>
-                                <fes:PropertyIsLessThanOrEqualTo>
-                                    <fes:ValueReference>input/doubleValue</fes:ValueReference>
-                                    <!--The value at which an alert shall end.-->
-                                    <fes:Literal>0.5</fes:Literal>
-                                </fes:PropertyIsLessThanOrEqualTo>
-                            </fes:Filter>
-                        </Guard>
-                        <PropertyRestrictions>
-                            <PropertyRestriction>
-                                <name>observedProperty</name>
-                                <value>urn:ogc:def:phenomenon:OGC::WaterLevel</value>
-                            </PropertyRestriction>
-                            <PropertyRestriction>
-                                <name>sensorID</name>
-                                <!--Here you need to insert the name of the procedure (sensor) which shall be monitored.-->
-                                <value>ws2500</value>
-                            </PropertyRestriction>
-                        </PropertyRestrictions>
-                    </SimplePattern>
-                </SimplePatterns>
-                <ComplexPatterns>
-                    <ComplexPattern patternID="initial_count_einstieg_stream_event">
-                        <SelectFunctions>
-                            <SelectFunction newEventName="rule4_overshoot_notification" createCausality="true" outputName="rule4_einstieg">
-                                <NotifyOnSelect>
-                                    <Message>Start of alert</Message>
-                                </NotifyOnSelect>
-                            </SelectFunction>
-                        </SelectFunctions>
-                        <Guard>
-                            <fes:Filter />
-                        </Guard>
-                        <StructuralOperator>
-                            <CAUSE/>
-                        </StructuralOperator>
-                        <FirstPattern>
-                            <PatternReference>initial_count</PatternReference>
-                            <SelectFunctionNumber>0</SelectFunctionNumber>
-                        </FirstPattern>
-                        <SecondPattern>
-                            <PatternReference>initial_count</PatternReference>
-                            <SelectFunctionNumber>0</SelectFunctionNumber>
-                        </SecondPattern>
-                    </ComplexPattern>
-                    <!-- Einstiegsklausel -->
-                    <ComplexPattern patternID="rule4_overshoot_notification_stream">
-                        <SelectFunctions>
-                            <SelectFunction newEventName="rule4_overshoot_notification" createCausality="true" outputName="rule4_einstieg">
-                                <NotifyOnSelect>
-                                    <Message>Start of alert</Message>
-                                </NotifyOnSelect>
-                            </SelectFunction>
-                        </SelectFunctions>
-                        <StructuralOperator>
-                            <BEFORE/>
-                        </StructuralOperator>
-                        <FirstPattern>
-                            <PatternReference>rule4_undershoot_stream</PatternReference>
-                            <SelectFunctionNumber>0</SelectFunctionNumber>
-                        </FirstPattern>
-                        <SecondPattern>
-                            <PatternReference>rule4_overshoot_stream</PatternReference>
-                            <SelectFunctionNumber>0</SelectFunctionNumber>
-                        </SecondPattern>
-                    </ComplexPattern>
-                    <ComplexPattern patternID="rule4_undershoot_notification_stream">
-                        <SelectFunctions>
-                            <SelectFunction newEventName="rule4_undershoot_notification" createCausality="true" outputName="rule4_ausstieg">
-                                <NotifyOnSelect>
-                                    <Message>End of alert</Message>
-                                </NotifyOnSelect>
-                            </SelectFunction>
-                        </SelectFunctions>
-                        <StructuralOperator>
-                            <BEFORE/>
-                        </StructuralOperator>
-                        <FirstPattern>
-                            <PatternReference>rule4_overshoot_stream</PatternReference>
-                            <SelectFunctionNumber>0</SelectFunctionNumber>
-                        </FirstPattern>
-                        <SecondPattern>
-                            <PatternReference>rule4_undershoot_stream</PatternReference>
-                            <SelectFunctionNumber>0</SelectFunctionNumber>
-                        </SecondPattern>
-                    </ComplexPattern>
-                </ComplexPatterns>
-                <TimerPatterns/>
-                <RepetitivePatterns/>
-            </EML>
-        </wps:Data>
-    </wps:Input>
-    <wps:Input id="sampling-rate">
-        <wps:Data>600000</wps:Data>
-    </wps:Input>
-    <wps:Input id="runtime">
-        <wps:Data>3600000</wps:Data>
-    </wps:Input>
-    <wps:Input id="notification-endpoint">
-        <wps:Data>http://115.146.93.218:8080/iddss-service</wps:Data>
-    </wps:Input>
-    <wps:Input id="sos-endpoint">
-        <wps:Data>http://sensorweb.demo.52north.org/sensorwebtestbed/service</wps:Data>
-    </wps:Input>
-    <wps:Input id="pox-getobservation-template">
-        <wps:Data mimeType="text/xml" schema="http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd">
-            <sos:GetObservation xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
-                <sos:procedure>ws2500</sos:procedure>
-                <sos:observedProperty>AirTemperature</sos:observedProperty>
-                <sos:featureOfInterest>ELV-WS2500</sos:featureOfInterest>
-                <sos:responseFormat>http://www.opengis.net/om/2.0</sos:responseFormat>
-            </sos:GetObservation>
-        </wps:Data>
-    </wps:Input>
-    <wps:Input id="kvp-getobservation-template">
-        <wps:Data>http://sensorweb.demo.52north.org/sensorwebtestbed/service?service=SOS&amp;version=2.0.0&amp;request=GetObservation&amp;offering=ws2500&amp;observedProperty=AirTemperature&amp;procedure=ws2500&amp;featureOfInterest=ELV-WS2500</wps:Data>
-    </wps:Input>
-    <wps:Output id="notification-endpoint" transmission="reference"/>
-</wps:Execute>
+<wps:ProcessDescriptions xmlns:wps="http://www.opengis.net/wps/1.0.0" 
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                         xmlns:ows="http://www.opengis.net/ows/1.1" 
+                         xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_response.xsd" 
+                         xml:lang="en-US" service="WPS" version="1.0.0">
+    <ProcessDescription statusSupported="true" storeSupported="true" wps:processVersion="1.1.0">
+        <ows:Identifier>org.n52.wps.extension.EventingProcess</ows:Identifier>
+        <ows:Title>IMIS IoT pilot eventing process</ows:Title>
+        <DataInputs>
+            <Input minOccurs="1" maxOccurs="1">
+                <ows:Identifier>notification-rule</ows:Identifier>
+                <ows:Title>EML rule for the event processing</ows:Title>
+                <ows:Abstract>
+                    The EML rule to filter incoming observations and to generate
+                    notifications.
+                </ows:Abstract>
+                <ComplexData>
+                    <Default>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <!--<Schema>http://eml-schema...</Schema>-->
+                        </Format>
+                    </Default>
+                    <Supported>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <!--<Schema>http://eml-schema...</Schema>-->
+                        </Format>
+                    </Supported>
+                </ComplexData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>sampling-rate</ows:Identifier>
+                <ows:Title>Sampling Rate</ows:Title>
+                <ows:Abstract>
+                    The rate at which new observations are requested from the 
+                    SOS (in ms). Will default to 10 minutes.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:long"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>runtime</ows:Identifier>
+                <ows:Title>Process Runtime</ows:Title>
+                <ows:Abstract>
+                    The maximum runtime of this process (in ms). It defaults to 
+                    -1 which means this process runs indefinitely.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:long"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+            <Input minOccurs="1" maxOccurs="1">
+                <ows:Identifier>notification-endpoint</ows:Identifier>
+                <ows:Title>RSS Endpoint</ows:Title>
+                <ows:Abstract>
+                    Then endpoint to which the process should supply notifications
+                    as RSS feed items.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:uri"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>sos-endpoint</ows:Identifier>
+                <ows:Title>SOS Endpoint</ows:Title>
+                <ows:Abstract>
+                    The endpoint to which the POX GetObservation request will be
+                    send. Only required if pox-getobservation-template is present.
+                    If kvp-getobservation-template is present, this input will 
+                    default to the URI extracted from that input.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:uri"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>pox-getobservation-template</ows:Identifier>
+                <ows:Title>GetObservation template for SOS requests</ows:Title>
+                <ows:Abstract>
+                    GetObservation template for POX requests. All temporal filters 
+                    will be cleared and the response format will be set to O&amp;M 2.
+                    The request will be send either be send to the endpoint specified
+                    in the sos-endpoint input or the endpoint will be extracted from
+                    the kvp-getobservation-template. If neither of these inputs is
+                    available, this process will fail. If this input as well the 
+                    kvp-getobservation-template input is present, this input will 
+                    take precedence.
+                </ows:Abstract>
+                <ComplexData>
+                    <Default>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <Schema>http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd</Schema>
+                        </Format>
+                    </Default>
+                    <Supported>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <Schema>http://schemas.opengis.net/sos/1.0.0/sosGetObservation.xsd</Schema>
+                        </Format>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <Schema>http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd</Schema>
+                        </Format>
+                    </Supported>
+                </ComplexData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>kvp-getobservation-template</ows:Identifier>
+                <ows:Title>GetObservation template for SOS importer</ows:Title>
+                <ows:Abstract>
+                    GetObservation template for KVP requests. The URL will not 
+                    be modified, but only a temporal filter will be appended. If
+                    this input as well as the pox-getobseravtion-template is 
+                    present, this input will be discarded.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:uri"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+        </DataInputs>
+        <ProcessOutputs>
+            <Output>
+                <ows:Identifier>notification-endpoint</ows:Identifier>
+                <ows:Title>notification-endpoint</ows:Title>
+                <ows:Abstract>
+                    The Endpoint to which the process supplied notifications 
+                    as RSS feed items. Same as the notification-endpoint input.
+                </ows:Abstract>
+                <LiteralOutput>
+                    <ows:DataType ows:reference="xs:uri"/>
+                </LiteralOutput>
+            </Output>
+        </ProcessOutputs>
+    </ProcessDescription>
+</wps:ProcessDescriptions>
