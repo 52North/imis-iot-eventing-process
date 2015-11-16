@@ -13,10 +13,10 @@
                 </gml:TimeInstant>
             </om:phenomenonTime>
             <om:resultTime xlink:href="#phenomenonTime" />
-            <om:procedure xlink:href="Wasserstand-List_Auf_Sylt_9570070" />
-            <om:observedProperty xlink:href="Wasserstand" />
+            <om:procedure xlink:href="ws2500" />
+            <om:observedProperty xlink:href="AirTemperature" />
             <om:featureOfInterest xlink:href="#ssf_test_feature_7_3" />
-            <om:result uom="test_unit_7_4">20</om:result>
+            <om:result uom="deg">20</om:result>
         </om:OM_Observation>
     </sos:observationData>
 </sos:GetObservationResponse>
