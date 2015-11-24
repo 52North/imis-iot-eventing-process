@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<EML xmlns="http://www.opengis.net/eml/0.0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<EML xmlns="http://www.opengis.net/eml/0.0.1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:fes="http://www.opengis.net/fes/2.0"
      xsi:schemaLocation="http://www.opengis.net/eml/0.0.1 3111_XSDeml0.0.1OGC-EML-0_0_1-eml.xsd">
     <SimplePatterns>
-        <SimplePattern inputName="input" patternID="Overshoot_Stream">
+        <SimplePattern inputName="input" patternID="overshoot">
             <SelectFunctions>
-                <SelectFunction createCausality="false" newEventName="Overshoot_Event">
+                <SelectFunction createCausality="false" newEventName="overshoot">
                     <SelectEvent eventName="input" />
                 </SelectFunction>
             </SelectFunctions>
@@ -14,7 +16,7 @@
                 </LengthView>
             </View>
             <Guard>
-                <fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0">
+                <fes:Filter>
                     <fes:PropertyIsGreaterThan>
                         <fes:ValueReference>input/doubleValue</fes:ValueReference>
                         <fes:Literal>15</fes:Literal>
@@ -32,9 +34,9 @@
                 </PropertyRestriction>
             </PropertyRestrictions>
         </SimplePattern>
-        <SimplePattern inputName="input" patternID="Undershoot_Stream">
+        <SimplePattern inputName="input" patternID="undershoot">
             <SelectFunctions>
-                <SelectFunction createCausality="false" newEventName="Undershoot_Event">
+                <SelectFunction createCausality="false" newEventName="undershoot">
                     <SelectEvent eventName="input" />
                 </SelectFunction>
             </SelectFunctions>
@@ -44,10 +46,10 @@
                 </LengthView>
             </View>
             <Guard>
-                <fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0">
+                <fes:Filter>
                     <fes:PropertyIsLessThanOrEqualTo>
                         <fes:ValueReference>input/doubleValue</fes:ValueReference>
-                        <fes:Literal>15</fes:Literal>
+                        <fes:Literal>10</fes:Literal>
                     </fes:PropertyIsLessThanOrEqualTo>
                 </fes:Filter>
             </Guard>
@@ -64,41 +66,39 @@
         </SimplePattern>
     </SimplePatterns>
     <ComplexPatterns>
-        <!-- Einstiegsklausel -->
-        <ComplexPattern
-            patternID="Overshoot_External_Output">
+        <ComplexPattern patternID="undershoot_overshoot">
             <SelectFunctions>
-                <SelectFunction createCausality="true" newEventName="Overshoot_External_Output" outputName="Overshoot_External_Output_Exit">
-                    <SelectEvent eventName="Overshoot_Event" />
+                <SelectFunction createCausality="true" newEventName="undershoot_overshoot" outputName="undershoot_overshoot_Exit">
+                    <SelectEvent eventName="overshoot" />
                 </SelectFunction>
             </SelectFunctions>
             <StructuralOperator>
                 <BEFORE />
             </StructuralOperator>
             <FirstPattern>
-                <PatternReference>Undershoot_Stream</PatternReference>
+                <PatternReference>undershoot</PatternReference>
                 <SelectFunctionNumber>0</SelectFunctionNumber>
             </FirstPattern>
             <SecondPattern>
-                <PatternReference>Overshoot_Stream</PatternReference>
+                <PatternReference>overshoot</PatternReference>
                 <SelectFunctionNumber>0</SelectFunctionNumber>
             </SecondPattern>
         </ComplexPattern>
-        <ComplexPattern patternID="Undershoot_External_Output">
+        <ComplexPattern patternID="overshoot_undershoot">
             <SelectFunctions>
-                <SelectFunction createCausality="true" newEventName="Undershoot_External_Output" outputName="Undershoot_External_Output_Exit">
-                    <SelectEvent eventName="Undershoot_Event" />
+                <SelectFunction createCausality="true" newEventName="overshoot_undershoot" outputName="overshoot_undershoot_Exit">
+                    <SelectEvent eventName="undershoot" />
                 </SelectFunction>
             </SelectFunctions>
             <StructuralOperator>
                 <BEFORE />
             </StructuralOperator>
             <FirstPattern>
-                <PatternReference>Overshoot_Stream</PatternReference>
+                <PatternReference>overshoot</PatternReference>
                 <SelectFunctionNumber>0</SelectFunctionNumber>
             </FirstPattern>
             <SecondPattern>
-                <PatternReference>Undershoot_Stream</PatternReference>
+                <PatternReference>undershoot</PatternReference>
                 <SelectFunctionNumber>0</SelectFunctionNumber>
             </SecondPattern>
         </ComplexPattern>

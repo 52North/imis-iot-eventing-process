@@ -57,4 +57,20 @@ public class URLConnectionHttpClient implements HttpClient {
         return conn.getInputStream();
     }
 
+    @Override
+    public InputStream post(URL url, String contentType, String request)
+            throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        conn.setRequestProperty("Content-Type", contentType);
+        conn.setRequestMethod("POST");
+
+        try (OutputStream post = conn.getOutputStream()) {
+            post.write(request.getBytes(StandardCharsets.UTF_8));
+        }
+
+        return conn.getInputStream();
+    }
+
 }

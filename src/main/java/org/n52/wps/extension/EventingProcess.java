@@ -1,29 +1,34 @@
 package org.n52.wps.extension;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.xmlbeans.XmlObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.n52.epos.filter.FilterInstantiationException;
 import org.n52.wps.io.data.IData;
 import org.n52.wps.io.data.binding.complex.GenericXMLDataBinding;
 import org.n52.wps.io.data.binding.literal.LiteralAnyURIBinding;
 import org.n52.wps.io.data.binding.literal.LiteralLongBinding;
-import org.n52.wps.server.AbstractAlgorithm;
 import org.n52.wps.server.ExceptionReport;
+import org.n52.wps.server.IAlgorithm;
 
-
-public class EventingProcess extends AbstractAlgorithm {
+/**
+ * {@linkplain IAlgorithm Algorithm} that filters a stream of observations using
+ * a EML rule and pushes notifications as a RSS feed.
+ *
+ * @author Christian Autermann
+ */
+public class EventingProcess extends ConvenientAbstractAlgorithm {
     private static final Logger LOG = LoggerFactory.getLogger(EventingProcess.class);
     public static final String EML_RULE_INPUT = "notification-rule";
     public static final String KVP_GET_OBSERVATION_TEMPLATE_INPUT = "kvp-getobservation-template";
@@ -33,8 +38,8 @@ public class EventingProcess extends AbstractAlgorithm {
     public static final String RSS_ENDPOINT_OUTPUT = "notification-endpoint";
     public static final String SAMPLING_RATE_INPUT = "sampling-rate";
     public static final String RUNTIME_INPUT = "runtime";
-    private static final long DEFAULT_RUNTIME = -1L;
-    private static final long DEFAULT_SAMPLING_RATE = TimeUnit.MINUTES.toMillis(10L);
+    public static final long DEFAULT_RUNTIME = -1L;
+    public static final long DEFAULT_SAMPLING_RATE = TimeUnit.MINUTES.toMillis(10L);
     private final HttpClient httpClient;
 
     /**
@@ -96,10 +101,21 @@ public class EventingProcess extends AbstractAlgorithm {
                 sosClient = new KvpSosClient(this.httpClient, sosEndpoint.toURL());
             }
 
+            Thread supervisor = Thread.currentThread();
             // SOS -> EPOS
             Thread sesFeeder = new Thread(new SesFeeder(sosClient, samplingRate));
             // EPOS -> RSS
             Thread rssFeeder = new Thread(new RssFeeder(xmlRule, rssEndpoint, this.httpClient));
+
+            List<Throwable> uncaughtExceptions = Collections.synchronizedList(new LinkedList<>());
+
+            UncaughtExceptionHandler eh = (t, e) -> {
+                uncaughtExceptions.add(e);
+                supervisor.interrupt();
+            };
+
+            rssFeeder.setUncaughtExceptionHandler(eh);
+            sesFeeder.setUncaughtExceptionHandler(eh);
 
             rssFeeder.start();
             sesFeeder.start();
@@ -155,14 +171,20 @@ public class EventingProcess extends AbstractAlgorithm {
                 }
             }
 
+            synchronized(uncaughtExceptions) {
+                if (!uncaughtExceptions.isEmpty()) {
+                    Throwable throwable = uncaughtExceptions.iterator().next();
+                    if (!(throwable instanceof InterruptedException)) {
+                        throw unknownError(throwable);
+                    }
+                }
+            }
+
             return createResultMap(rssEndpoint);
-
-        } catch (URISyntaxException| MalformedURLException | FilterInstantiationException e) {
+        } catch (URISyntaxException| MalformedURLException e) {
             LOG.error(e.getMessage(), e);
-            throw new ExceptionReport("Error executiong process", ExceptionReport.NO_APPLICABLE_CODE, e);
+            throw unknownError(e);
         }
-
-
     }
 
     /**
@@ -178,55 +200,8 @@ public class EventingProcess extends AbstractAlgorithm {
         return result;
     }
 
-    /**
-     * Will return the first input with the id {@code key} if it exist or else
-     * {@code defaultValue}.
-     *
-     * @param <T>          the resulting type
-     * @param inputs       the input data map
-     * @param key          the input id
-     * @param defaultValue the default value (may be {@code null})
-     *
-     * @return the input or {@code defaultValue}
-     */
-    @SuppressWarnings("unchecked")
-    private <T> T getOptionalSingleInput(Map<String, List<IData>> inputs,
-                                         String key, T defaultValue) {
-        return Optional.ofNullable(inputs)
-                .map(m -> m.get(key))
-                .filter(l -> !l.isEmpty())
-                .map(m -> (T) m.get(0).getPayload())
-                .orElse(defaultValue);
-    }
-
-    /**
-     * Will return the first input with the id {@code key}.
-     *
-     * @param <T>    the resulting type
-     * @param inputs the input data map
-     * @param key    the input id
-     *
-     * @return the input
-     *
-     * @throws ExceptionReport if the input does not exist
-     */
-    private <T> T getSingleInput(Map<String, List<IData>> inputs, String key)
-            throws ExceptionReport {
-        T input = getOptionalSingleInput(inputs, key, null);
-        if (input == null) {
-            throw missingParameterValue(key);
-        }
-        return input;
-    }
-
-
     @Override
-    public List<String> getErrors() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public Class<?> getInputDataType(String id) {
+    public  Class<?> getInputDataType(String id) {
         switch (id) {
             case EML_RULE_INPUT:
             case POX_GET_OBSERVATION_TEMPLATE_INPUT:
@@ -244,7 +219,7 @@ public class EventingProcess extends AbstractAlgorithm {
     }
 
     @Override
-    public Class<?> getOutputDataType(String id) {
+    public  Class<?> getOutputDataType(String id) {
         switch (id) {
             case RSS_ENDPOINT_OUTPUT:
                 return LiteralAnyURIBinding.class;
@@ -253,18 +228,6 @@ public class EventingProcess extends AbstractAlgorithm {
         }
     }
 
-    /**
-     * Creates an {@code ExceptionReport} describing the absence of the required
-     * parameter {@code inputId}
-     *
-     * @param inputId the input id
-     *
-     * @return the exception report
-     */
-    private static ExceptionReport missingParameterValue(String inputId) {
-        return new ExceptionReport(String.format("Missing %s input", inputId),
-                                   ExceptionReport.MISSING_PARAMETER_VALUE);
-    }
 
     /**
      * Creates an {@code ExceptionReport} describing that either a KVP or POX

@@ -55,4 +55,19 @@ public interface HttpClient {
      */
     OutputStream post(URL url, String contentType)
             throws IOException;
+
+    /**
+     * Initiate a HTTP {@code POST} to endpoint using the specified content type
+     * and send the specified request.
+     *
+     * @param url         the endpoint
+     * @param contentType the content type
+     * @param request     the request
+     *
+     * @return the response stream
+     *
+     * @throws IOException if the HTTP call fails
+     */
+    InputStream post(URL url, String contentType, String request)
+            throws IOException;
 }

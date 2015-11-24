@@ -35,7 +35,7 @@ public class KvpSosClient implements SosClient {
     }
 
     @Override
-    public GetObservationResponseDocument getObservation(DateTime begin,
+    public GetObservationResponseDocument getObservations(DateTime begin,
                                                          DateTime end)
             throws XmlException, IOException {
         try {

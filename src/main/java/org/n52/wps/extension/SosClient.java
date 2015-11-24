@@ -26,6 +26,6 @@ public interface SosClient {
      *                      {@code GetObservationResponseDocument}
      * @throws IOException  if the underlying HTTP call fails
      */
-    GetObservationResponseDocument getObservation(DateTime begin, DateTime end)
+    GetObservationResponseDocument getObservations(DateTime begin, DateTime end)
             throws XmlException, IOException;
 }

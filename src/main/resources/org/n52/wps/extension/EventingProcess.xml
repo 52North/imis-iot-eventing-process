@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<wps:ProcessDescriptions xmlns:wps="http://www.opengis.net/wps/1.0.0" 
-                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                         xmlns:ows="http://www.opengis.net/ows/1.1" 
-                         xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_response.xsd" 
+<wps:ProcessDescriptions xmlns:wps="http://www.opengis.net/wps/1.0.0"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                         xmlns:ows="http://www.opengis.net/ows/1.1"
+                         xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_response.xsd"
                          xml:lang="en-US" service="WPS" version="1.0.0">
     <ProcessDescription statusSupported="true" storeSupported="true" wps:processVersion="1.1.0">
         <ows:Identifier>org.n52.wps.extension.EventingProcess</ows:Identifier>
@@ -34,7 +34,7 @@
                 <ows:Identifier>sampling-rate</ows:Identifier>
                 <ows:Title>Sampling Rate</ows:Title>
                 <ows:Abstract>
-                    The rate at which new observations are requested from the 
+                    The rate at which new observations are requested from the
                     SOS (in ms). Will default to 10 minutes.
                 </ows:Abstract>
                 <LiteralData>
@@ -46,7 +46,7 @@
                 <ows:Identifier>runtime</ows:Identifier>
                 <ows:Title>Process Runtime</ows:Title>
                 <ows:Abstract>
-                    The maximum runtime of this process (in ms). It defaults to 
+                    The maximum runtime of this process (in ms). It defaults to
                     -1 which means this process runs indefinitely.
                 </ows:Abstract>
                 <LiteralData>
@@ -72,7 +72,7 @@
                 <ows:Abstract>
                     The endpoint to which the POX GetObservation request will be
                     send. Only required if pox-getobservation-template is present.
-                    If kvp-getobservation-template is present, this input will 
+                    If kvp-getobservation-template is present, this input will
                     default to the URI extracted from that input.
                 </ows:Abstract>
                 <LiteralData>
@@ -84,13 +84,13 @@
                 <ows:Identifier>pox-getobservation-template</ows:Identifier>
                 <ows:Title>GetObservation template for SOS requests</ows:Title>
                 <ows:Abstract>
-                    GetObservation template for POX requests. All temporal filters 
+                    GetObservation template for POX requests. All temporal filters
                     will be cleared and the response format will be set to O&amp;M 2.
                     The request will be send either be send to the endpoint specified
                     in the sos-endpoint input or the endpoint will be extracted from
                     the kvp-getobservation-template. If neither of these inputs is
-                    available, this process will fail. If this input as well the 
-                    kvp-getobservation-template input is present, this input will 
+                    available, this process will fail. If this input as well the
+                    kvp-getobservation-template input is present, this input will
                     take precedence.
                 </ows:Abstract>
                 <ComplexData>
@@ -116,9 +116,9 @@
                 <ows:Identifier>kvp-getobservation-template</ows:Identifier>
                 <ows:Title>GetObservation template for SOS importer</ows:Title>
                 <ows:Abstract>
-                    GetObservation template for KVP requests. The URL will not 
+                    GetObservation template for KVP requests. The URL will not
                     be modified, but only a temporal filter will be appended. If
-                    this input as well as the pox-getobseravtion-template is 
+                    this input as well as the pox-getobseravtion-template is
                     present, this input will be discarded.
                 </ows:Abstract>
                 <LiteralData>
@@ -132,7 +132,7 @@
                 <ows:Identifier>notification-endpoint</ows:Identifier>
                 <ows:Title>notification-endpoint</ows:Title>
                 <ows:Abstract>
-                    The Endpoint to which the process supplied notifications 
+                    The Endpoint to which the process supplied notifications
                     as RSS feed items. Same as the notification-endpoint input.
                 </ows:Abstract>
                 <LiteralOutput>
