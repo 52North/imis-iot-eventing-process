@@ -13,6 +13,8 @@ import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.xmlbeans.XmlException;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of {@code SosClient} using KVP.
@@ -20,6 +22,8 @@ import org.joda.time.format.ISODateTimeFormat;
  * @author Christian Autermann
  */
 public class KvpSosClient implements SosClient {
+
+    private static final Logger log = LoggerFactory.getLogger(KvpSosClient.class);
 
     private final HttpClient client;
     private final URL requestTemplate;
@@ -40,6 +44,7 @@ public class KvpSosClient implements SosClient {
             throws XmlException, IOException {
         try {
             URL url = createRequest(begin, end);
+            log.info("Requesting: {}", url);
             try (InputStream in = this.client.get(url)) {
                 return GetObservationResponseDocument.Factory.parse(in);
             }
@@ -65,9 +70,9 @@ public class KvpSosClient implements SosClient {
         Objects.requireNonNull(end);
         StringBuilder builder = new StringBuilder();
         builder.append(this.requestTemplate.toString());
-        builder.append("&namespaces=").append(URIUtil.encodeQuery("xmlns(om:http://www.opengis.net/om/2.0)"));
+        builder.append("&namespaces=").append(URIUtil.encodeQuery("xmlns(om,http://www.opengis.net/om/2.0)"));
         builder.append("&temporalFilter=");
-        String temporalFilter = "om:phenomenonTime/" +
+        String temporalFilter = "om:phenomenonTime," +
                                 ISODateTimeFormat.dateTime().print(begin) +
                                 "/" +
                                 ISODateTimeFormat.dateTime().print(end);
