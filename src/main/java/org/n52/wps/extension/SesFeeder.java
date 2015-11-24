@@ -51,11 +51,13 @@ public class SesFeeder implements Runnable {
             DateTime begin = last.minus(1L);
             DateTime end = DateTime.now();
             this.last = end;
+            LOG.info("requesting latest SOS data");
             try {
                 ObservationData[] observationData = this.client
                         .getObservations(begin, end)
                         .getGetObservationResponse()
                         .getObservationDataArray();
+                LOG.info("Received {} observations", observationData.length);
                 Arrays.stream(observationData)
                         .map(ObservationData::getOMObservation)
                         .forEach(this::postEvent);
@@ -75,6 +77,8 @@ public class SesFeeder implements Runnable {
                 LOG.error("XmlException", ex);
             }
         }
+
+        LOG.info("SOS request thread interrupted");
     }
 
     private void postEvent(OMObservationType xml) {

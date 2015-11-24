@@ -45,7 +45,7 @@
                                 <value>AirTemperature</value>
                             </PropertyRestriction>
                             <PropertyRestriction>
-                                <name>sensorID</name>
+                                <name>procedure</name>
                                 <!--Here you need to insert the name of the procedure (sensor) which shall be monitored.-->
                                 <value>ws2500</value>
                             </PropertyRestriction>
@@ -78,9 +78,9 @@
                                 <value>AirTemperature</value>
                             </PropertyRestriction>
                             <PropertyRestriction>
-                                <name>sensorID</name>
-                                <!--Here you need to insert the name of the observed property which shall be monitored.-->
-                                <value>AirTemperature</value>
+                                <name>procedure</name>
+                                <!--Here you need to insert the name of the procedure (sensor) which shall be monitored.-->
+                                <value>ws2500</value>
                             </PropertyRestriction>
                         </PropertyRestrictions>
                     </SimplePattern>
@@ -107,10 +107,10 @@
                         <PropertyRestrictions>
                             <PropertyRestriction>
                                 <name>observedProperty</name>
-                                <value>urn:ogc:def:phenomenon:OGC::WaterLevel</value>
+                                <value>AirTemperature</value>
                             </PropertyRestriction>
                             <PropertyRestriction>
-                                <name>sensorID</name>
+                                <name>procedure</name>
                                 <!--Here you need to insert the name of the procedure (sensor) which shall be monitored.-->
                                 <value>ws2500</value>
                             </PropertyRestriction>
@@ -121,9 +121,7 @@
                     <ComplexPattern patternID="initial_count_einstieg_stream_event">
                         <SelectFunctions>
                             <SelectFunction newEventName="rule4_overshoot_notification" createCausality="true" outputName="rule4_einstieg">
-                                <NotifyOnSelect>
-                                    <Message>Start of alert</Message>
-                                </NotifyOnSelect>
+                                <SelectEvent eventName="initial_count_stream" />
                             </SelectFunction>
                         </SelectFunctions>
                         <Guard>
@@ -145,9 +143,7 @@
                     <ComplexPattern patternID="rule4_overshoot_notification_stream">
                         <SelectFunctions>
                             <SelectFunction newEventName="rule4_overshoot_notification" createCausality="true" outputName="rule4_einstieg">
-                                <NotifyOnSelect>
-                                    <Message>Start of alert</Message>
-                                </NotifyOnSelect>
+                                <SelectEvent eventName="rule4_overshoot" />
                             </SelectFunction>
                         </SelectFunctions>
                         <StructuralOperator>
@@ -165,9 +161,7 @@
                     <ComplexPattern patternID="rule4_undershoot_notification_stream">
                         <SelectFunctions>
                             <SelectFunction newEventName="rule4_undershoot_notification" createCausality="true" outputName="rule4_ausstieg">
-                                <NotifyOnSelect>
-                                    <Message>End of alert</Message>
-                                </NotifyOnSelect>
+                                <SelectEvent eventName="rule4_undershoot" />
                             </SelectFunction>
                         </SelectFunctions>
                         <StructuralOperator>

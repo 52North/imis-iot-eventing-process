@@ -62,7 +62,7 @@
                     as RSS feed items.
                 </ows:Abstract>
                 <LiteralData>
-                    <ows:DataType ows:reference="xs:uri"/>
+                    <ows:DataType ows:reference="xs:anyURI"/>
                     <ows:AnyValue/>
                 </LiteralData>
             </Input>
@@ -76,7 +76,7 @@
                     default to the URI extracted from that input.
                 </ows:Abstract>
                 <LiteralData>
-                    <ows:DataType ows:reference="xs:uri"/>
+                    <ows:DataType ows:reference="xs:anyURI"/>
                     <ows:AnyValue/>
                 </LiteralData>
             </Input>
@@ -122,7 +122,7 @@
                     present, this input will be discarded.
                 </ows:Abstract>
                 <LiteralData>
-                    <ows:DataType ows:reference="xs:uri"/>
+                    <ows:DataType ows:reference="xs:anyURI"/>
                     <ows:AnyValue/>
                 </LiteralData>
             </Input>
@@ -136,7 +136,7 @@
                     as RSS feed items. Same as the notification-endpoint input.
                 </ows:Abstract>
                 <LiteralOutput>
-                    <ows:DataType ows:reference="xs:uri"/>
+                    <ows:DataType ows:reference="xs:anyURI"/>
                 </LiteralOutput>
             </Output>
         </ProcessOutputs>

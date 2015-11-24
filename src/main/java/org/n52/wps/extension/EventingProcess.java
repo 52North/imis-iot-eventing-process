@@ -86,7 +86,7 @@ public class EventingProcess extends ConvenientAbstractAlgorithm {
                         kvpRequest.getHost(),
                         kvpRequest.getPort(),
                         kvpRequest.getPath(),
-                        null, null);
+                        kvpRequest.getQuery(), null);
             }
 
             if (poxRequest != null && sosEndpoint == null) {
