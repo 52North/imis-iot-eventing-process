@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EML xmlns="http://www.opengis.net/eml/0.0.1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:fes="http://www.opengis.net/fes/2.0"
+     xsi:schemaLocation="http://www.opengis.net/eml/0.0.1 3111_XSDeml0.0.1OGC-EML-0_0_1-eml.xsd">
+    <SimplePatterns>
+        <SimplePattern inputName="input" patternID="overshoot">
+            <SelectFunctions>
+                <SelectFunction createCausality="false" newEventName="overshoot">
+                    <SelectEvent eventName="input" />
+                </SelectFunction>
+            </SelectFunctions>
+            <View>
+                <LengthView>
+                    <EventCount>1</EventCount>
+                </LengthView>
+            </View>
+            <Guard>
+                <fes:Filter>
+                    <fes:PropertyIsGreaterThan>
+                        <fes:ValueReference>input/doubleValue</fes:ValueReference>
+                        <fes:Literal>15</fes:Literal>
+                    </fes:PropertyIsGreaterThan>
+                </fes:Filter>
+            </Guard>
+            <PropertyRestrictions>
+                <PropertyRestriction>
+                    <name>observedProperty</name>
+                    <value>AirTemperature</value>
+                </PropertyRestriction>
+                <PropertyRestriction>
+                    <name>procedure</name>
+                    <value>ws2500</value>
+                </PropertyRestriction>
+            </PropertyRestrictions>
+        </SimplePattern>
+        <SimplePattern inputName="input" patternID="undershoot">
+            <SelectFunctions>
+                <SelectFunction createCausality="false" newEventName="undershoot">
+                    <SelectEvent eventName="input" />
+                </SelectFunction>
+            </SelectFunctions>
+            <View>
+                <LengthView>
+                    <EventCount>1</EventCount>
+                </LengthView>
+            </View>
+            <Guard>
+                <fes:Filter>
+                    <fes:PropertyIsLessThanOrEqualTo>
+                        <fes:ValueReference>input/doubleValue</fes:ValueReference>
+                        <fes:Literal>10</fes:Literal>
+                    </fes:PropertyIsLessThanOrEqualTo>
+                </fes:Filter>
+            </Guard>
+            <PropertyRestrictions>
+                <PropertyRestriction>
+                    <name>observedProperty</name>
+                    <value>AirTemperature</value>
+                </PropertyRestriction>
+                <PropertyRestriction>
+                    <name>procedure</name>
+                    <value>ws2500</value>
+                </PropertyRestriction>
+            </PropertyRestrictions>
+        </SimplePattern>
+    </SimplePatterns>
+    <ComplexPatterns>
+        <ComplexPattern patternID="undershoot_overshoot">
+            <SelectFunctions>
+                <SelectFunction createCausality="true" newEventName="undershoot_overshoot" outputName="undershoot_overshoot_Exit">
+                    <SelectEvent eventName="overshoot" />
+                </SelectFunction>
+            </SelectFunctions>
+            <StructuralOperator>
+                <BEFORE />
+            </StructuralOperator>
+            <FirstPattern>
+                <PatternReference>undershoot</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </FirstPattern>
+            <SecondPattern>
+                <PatternReference>overshoot</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </SecondPattern>
+        </ComplexPattern>
+        <ComplexPattern patternID="overshoot_undershoot">
+            <SelectFunctions>
+                <SelectFunction createCausality="true" newEventName="overshoot_undershoot" outputName="overshoot_undershoot_Exit">
+                    <SelectEvent eventName="undershoot" />
+                </SelectFunction>
+            </SelectFunctions>
+            <StructuralOperator>
+                <BEFORE />
+            </StructuralOperator>
+            <FirstPattern>
+                <PatternReference>overshoot</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </FirstPattern>
+            <SecondPattern>
+                <PatternReference>undershoot</PatternReference>
+                <SelectFunctionNumber>0</SelectFunctionNumber>
+            </SecondPattern>
+        </ComplexPattern>
+    </ComplexPatterns>
+    <TimerPatterns />
+    <RepetitivePatterns />
+</EML>

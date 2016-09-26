@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wps:Result xmlns:wps="http://www.opengis.net/wps/2.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.opengis.net/wps/2.0 http://schemas.opengis.net/wps/2.0/wps.xsd">
+    <wps:Output id="notification-endpoint">
+        <wps:Data>http://115.146.93.218:8080/iddss-service</wps:Data>
+    </wps:Output>
+</wps:Result>

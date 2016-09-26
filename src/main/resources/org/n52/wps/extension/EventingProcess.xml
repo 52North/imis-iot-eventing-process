@@ -1,66 +1,144 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<wps:ProcessDescriptions xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ows="http://www.opengis.net/ows/1.1" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_response.xsd" xml:lang="en-US" service="WPS" version="1.0.0">
-  <ProcessDescription statusSupported="true" storeSupported="true" wps:processVersion="1.1.0">
-    <ows:Identifier>org.n52.wps.extension.EventingProcess</ows:Identifier>
-    <ows:Title>IMIS IoT pilot eventing process</ows:Title>
-    <DataInputs>
-      <Input minOccurs="1" maxOccurs="1">
-        <ows:Identifier>notification-rule</ows:Identifier>
-        <ows:Title>EML rule for the event processing</ows:Title>
-        <ComplexData>
-          <Default>
-            <Format>
-              <MimeType>text/xml</MimeType>
-<!--               <Schema>http://eml-schema...</Schema> -->
-            </Format>
-          </Default>
-          <Supported>
-            <Format>
-              <MimeType>text/xml</MimeType>
-<!--               <Schema>http://eml-schema...</Schema> -->
-            </Format>
-          </Supported>
-        </ComplexData>
-      </Input>
-      <Input minOccurs="1" maxOccurs="1">
-        <ows:Identifier>getobservation-template</ows:Identifier>
-        <ows:Title>GetObservation template for SOS importer</ows:Title>
-        <ComplexData>
-          <Default>
-            <Format>
-              <MimeType>text/xml</MimeType>
-              <Schema>http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd</Schema>
-            </Format>
-          </Default>
-          <Supported>
-            <Format>
-              <MimeType>text/xml</MimeType>
-              <Schema>http://schemas.opengis.net/sos/1.0.0/sosGetObservation.xsd</Schema>
-            </Format>
-            <Format>
-              <MimeType>text/xml</MimeType>
-              <Schema>http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd</Schema>
-            </Format>
-          </Supported>
-        </ComplexData>
-      </Input>
-      <Input minOccurs="1" maxOccurs="1">
-        <ows:Identifier>notification-endpoint</ows:Identifier>
-        <ows:Title>width</ows:Title>
-        <LiteralData>
-          <ows:DataType ows:reference="xs:uri"/>
-          <ows:AnyValue/>
-        </LiteralData>
-      </Input>
-    </DataInputs>
-    <ProcessOutputs>
-      <Output>
-        <ows:Identifier>notification-endpoint</ows:Identifier>
-        <ows:Title>notification-endpoint</ows:Title>
-        <LiteralOutput>
-          <ows:DataType ows:reference="xs:uri"/>
-        </LiteralOutput>
-      </Output>
-    </ProcessOutputs>
-  </ProcessDescription>
+<wps:ProcessDescriptions xmlns:wps="http://www.opengis.net/wps/1.0.0"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                         xmlns:ows="http://www.opengis.net/ows/1.1"
+                         xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_response.xsd"
+                         xml:lang="en-US" service="WPS" version="1.0.0">
+    <ProcessDescription statusSupported="true" storeSupported="true" wps:processVersion="1.1.0">
+        <ows:Identifier>org.n52.wps.extension.EventingProcess</ows:Identifier>
+        <ows:Title>IMIS IoT pilot eventing process</ows:Title>
+        <DataInputs>
+            <Input minOccurs="1" maxOccurs="1">
+                <ows:Identifier>notification-rule</ows:Identifier>
+                <ows:Title>EML rule for the event processing</ows:Title>
+                <ows:Abstract>
+                    The EML rule to filter incoming observations and to generate
+                    notifications.
+                </ows:Abstract>
+                <ComplexData>
+                    <Default>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <!--<Schema>http://eml-schema...</Schema>-->
+                        </Format>
+                    </Default>
+                    <Supported>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <!--<Schema>http://eml-schema...</Schema>-->
+                        </Format>
+                    </Supported>
+                </ComplexData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>sampling-rate</ows:Identifier>
+                <ows:Title>Sampling Rate</ows:Title>
+                <ows:Abstract>
+                    The rate at which new observations are requested from the
+                    SOS (in ms). Will default to 10 minutes.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:long"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>runtime</ows:Identifier>
+                <ows:Title>Process Runtime</ows:Title>
+                <ows:Abstract>
+                    The maximum runtime of this process (in ms). It defaults to
+                    -1 which means this process runs indefinitely.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:long"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+            <Input minOccurs="1" maxOccurs="1">
+                <ows:Identifier>notification-endpoint</ows:Identifier>
+                <ows:Title>RSS Endpoint</ows:Title>
+                <ows:Abstract>
+                    Then endpoint to which the process should supply notifications
+                    as RSS feed items.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:anyURI"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>sos-endpoint</ows:Identifier>
+                <ows:Title>SOS Endpoint</ows:Title>
+                <ows:Abstract>
+                    The endpoint to which the POX GetObservation request will be
+                    send. Only required if pox-getobservation-template is present.
+                    If kvp-getobservation-template is present, this input will
+                    default to the URI extracted from that input.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:anyURI"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>pox-getobservation-template</ows:Identifier>
+                <ows:Title>GetObservation template for SOS requests</ows:Title>
+                <ows:Abstract>
+                    GetObservation template for POX requests. All temporal filters
+                    will be cleared and the response format will be set to O&amp;M 2.
+                    The request will be send either be send to the endpoint specified
+                    in the sos-endpoint input or the endpoint will be extracted from
+                    the kvp-getobservation-template. If neither of these inputs is
+                    available, this process will fail. If this input as well the
+                    kvp-getobservation-template input is present, this input will
+                    take precedence.
+                </ows:Abstract>
+                <ComplexData>
+                    <Default>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <Schema>http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd</Schema>
+                        </Format>
+                    </Default>
+                    <Supported>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <Schema>http://schemas.opengis.net/sos/1.0.0/sosGetObservation.xsd</Schema>
+                        </Format>
+                        <Format>
+                            <MimeType>text/xml</MimeType>
+                            <Schema>http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd</Schema>
+                        </Format>
+                    </Supported>
+                </ComplexData>
+            </Input>
+            <Input minOccurs="0" maxOccurs="1">
+                <ows:Identifier>kvp-getobservation-template</ows:Identifier>
+                <ows:Title>GetObservation template for SOS importer</ows:Title>
+                <ows:Abstract>
+                    GetObservation template for KVP requests. The URL will not
+                    be modified, but only a temporal filter will be appended. If
+                    this input as well as the pox-getobseravtion-template is
+                    present, this input will be discarded.
+                </ows:Abstract>
+                <LiteralData>
+                    <ows:DataType ows:reference="xs:anyURI"/>
+                    <ows:AnyValue/>
+                </LiteralData>
+            </Input>
+        </DataInputs>
+        <ProcessOutputs>
+            <Output>
+                <ows:Identifier>notification-endpoint</ows:Identifier>
+                <ows:Title>notification-endpoint</ows:Title>
+                <ows:Abstract>
+                    The Endpoint to which the process supplied notifications
+                    as RSS feed items. Same as the notification-endpoint input.
+                </ows:Abstract>
+                <LiteralOutput>
+                    <ows:DataType ows:reference="xs:anyURI"/>
+                </LiteralOutput>
+            </Output>
+        </ProcessOutputs>
+    </ProcessDescription>
 </wps:ProcessDescriptions>

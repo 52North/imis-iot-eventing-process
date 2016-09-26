@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wps:Execute xmlns:wps="http://www.opengis.net/wps/2.0"
+             xmlns:ows="http://www.opengis.net/ows/2.0"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.opengis.net/wps/2.0 http://schemas.opengis.net/wps/2.0/wps.xsd"
+             service="WPS" version="2.0.0" response="document" mode="async">
+    <ows:Identifier>org.n52.wps.extension.EventingProcess</ows:Identifier>
+    <!--The event notification rule. All elements that must be adjusted are marked with a comment.-->
+    <wps:Input id="notification-rule">
+        <wps:Data mimeType="text/xml">
+            <EML xmlns="http://www.opengis.net/eml/0.0.1"
+                 xmlns:fes="http://www.opengis.net/fes/2.0"
+                 xmlns:swe="http://www.opengis.net/swe/1.0.1"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <SimplePatterns>
+                    <!-- input pattern if only one value is in the eventing queue -->
+                    <SimplePattern inputName="input" patternID="initial_count">
+                        <SelectFunctions>
+                            <SelectFunction newEventName="initial_count_stream">
+                                <SelectEvent eventName="input"/>
+                            </SelectFunction>
+                        </SelectFunctions>
+                        <View>
+                            <LengthView>
+                                <EventCount>2</EventCount>
+                            </LengthView>
+                        </View>
+                        <Guard>
+                            <fes:Filter >
+                                <fes:PropertyIsEqualTo>
+                                    <fes:ValueReference>VIEW_COUNT</fes:ValueReference>
+                                    <fes:Literal >
+                                        <swe:Count >
+                                            <swe:value>1</swe:value>
+                                        </swe:Count>
+                                    </fes:Literal>
+                                </fes:PropertyIsEqualTo>
+                            </fes:Filter>
+                        </Guard>
+                        <PropertyRestrictions>
+                            <PropertyRestriction>
+                                <name>observedProperty</name>
+                                <!--Here you need to insert the name of the observed property which shall be monitored.-->
+                                <value>AirTemperature</value>
+                            </PropertyRestriction>
+                            <PropertyRestriction>
+                                <name>procedure</name>
+                                <!--Here you need to insert the name of the procedure (sensor) which shall be monitored.-->
+                                <value>ws2500</value>
+                            </PropertyRestriction>
+                        </PropertyRestrictions>
+                    </SimplePattern>
+                    <SimplePattern inputName="input" patternID="rule4_overshoot_stream">
+                        <SelectFunctions>
+                            <SelectFunction newEventName="rule4_overshoot" createCausality="false">
+                                <SelectEvent eventName="input"/>
+                            </SelectFunction>
+                        </SelectFunctions>
+                        <View>
+                            <LengthView>
+                                <EventCount>1</EventCount>
+                            </LengthView>
+                        </View>
+                        <Guard>
+                            <fes:Filter>
+                                <fes:PropertyIsGreaterThan>
+                                    <fes:ValueReference>input/doubleValue</fes:ValueReference>
+                                    <!--  The value at which an alert shall start.-->
+                                    <fes:Literal>30.6</fes:Literal>
+                                </fes:PropertyIsGreaterThan>
+                            </fes:Filter>
+                        </Guard>
+                        <PropertyRestrictions>
+                            <PropertyRestriction>
+                                <name>observedProperty</name>
+                                <!--Here you need to insert the name of the observed property which shall be monitored.-->
+                                <value>AirTemperature</value>
+                            </PropertyRestriction>
+                            <PropertyRestriction>
+                                <name>procedure</name>
+                                <!--Here you need to insert the name of the procedure (sensor) which shall be monitored.-->
+                                <value>ws2500</value>
+                            </PropertyRestriction>
+                        </PropertyRestrictions>
+                    </SimplePattern>
+                    <SimplePattern inputName="input" patternID="rule4_undershoot_stream">
+                        <SelectFunctions>
+                            <SelectFunction newEventName="rule4_undershoot" createCausality="false">
+                                <SelectEvent eventName="input"/>
+                            </SelectFunction>
+                        </SelectFunctions>
+                        <View>
+                            <LengthView>
+                                <EventCount>1</EventCount>
+                            </LengthView>
+                        </View>
+                        <Guard>
+                            <fes:Filter>
+                                <fes:PropertyIsLessThanOrEqualTo>
+                                    <fes:ValueReference>input/doubleValue</fes:ValueReference>
+                                    <!--The value at which an alert shall end.-->
+                                    <fes:Literal>0.5</fes:Literal>
+                                </fes:PropertyIsLessThanOrEqualTo>
+                            </fes:Filter>
+                        </Guard>
+                        <PropertyRestrictions>
+                            <PropertyRestriction>
+                                <name>observedProperty</name>
+                                <value>AirTemperature</value>
+                            </PropertyRestriction>
+                            <PropertyRestriction>
+                                <name>procedure</name>
+                                <!--Here you need to insert the name of the procedure (sensor) which shall be monitored.-->
+                                <value>ws2500</value>
+                            </PropertyRestriction>
+                        </PropertyRestrictions>
+                    </SimplePattern>
+                </SimplePatterns>
+                <ComplexPatterns>
+                    <ComplexPattern patternID="initial_count_einstieg_stream_event">
+                        <SelectFunctions>
+                            <SelectFunction newEventName="rule4_overshoot_notification" createCausality="true" outputName="rule4_einstieg">
+                                <SelectEvent eventName="initial_count_stream" />
+                            </SelectFunction>
+                        </SelectFunctions>
+                        <Guard>
+                            <fes:Filter />
+                        </Guard>
+                        <StructuralOperator>
+                            <CAUSE/>
+                        </StructuralOperator>
+                        <FirstPattern>
+                            <PatternReference>initial_count</PatternReference>
+                            <SelectFunctionNumber>0</SelectFunctionNumber>
+                        </FirstPattern>
+                        <SecondPattern>
+                            <PatternReference>initial_count</PatternReference>
+                            <SelectFunctionNumber>0</SelectFunctionNumber>
+                        </SecondPattern>
+                    </ComplexPattern>
+                    <!-- Einstiegsklausel -->
+                    <ComplexPattern patternID="rule4_overshoot_notification_stream">
+                        <SelectFunctions>
+                            <SelectFunction newEventName="rule4_overshoot_notification" createCausality="true" outputName="rule4_einstieg">
+                                <SelectEvent eventName="rule4_overshoot" />
+                            </SelectFunction>
+                        </SelectFunctions>
+                        <StructuralOperator>
+                            <BEFORE/>
+                        </StructuralOperator>
+                        <FirstPattern>
+                            <PatternReference>rule4_undershoot_stream</PatternReference>
+                            <SelectFunctionNumber>0</SelectFunctionNumber>
+                        </FirstPattern>
+                        <SecondPattern>
+                            <PatternReference>rule4_overshoot_stream</PatternReference>
+                            <SelectFunctionNumber>0</SelectFunctionNumber>
+                        </SecondPattern>
+                    </ComplexPattern>
+                    <ComplexPattern patternID="rule4_undershoot_notification_stream">
+                        <SelectFunctions>
+                            <SelectFunction newEventName="rule4_undershoot_notification" createCausality="true" outputName="rule4_ausstieg">
+                                <SelectEvent eventName="rule4_undershoot" />
+                            </SelectFunction>
+                        </SelectFunctions>
+                        <StructuralOperator>
+                            <BEFORE/>
+                        </StructuralOperator>
+                        <FirstPattern>
+                            <PatternReference>rule4_overshoot_stream</PatternReference>
+                            <SelectFunctionNumber>0</SelectFunctionNumber>
+                        </FirstPattern>
+                        <SecondPattern>
+                            <PatternReference>rule4_undershoot_stream</PatternReference>
+                            <SelectFunctionNumber>0</SelectFunctionNumber>
+                        </SecondPattern>
+                    </ComplexPattern>
+                </ComplexPatterns>
+                <TimerPatterns/>
+                <RepetitivePatterns/>
+            </EML>
+        </wps:Data>
+    </wps:Input>
+    <wps:Input id="sampling-rate">
+        <wps:Data>600000</wps:Data>
+    </wps:Input>
+    <wps:Input id="runtime">
+        <wps:Data>3600000</wps:Data>
+    </wps:Input>
+    <wps:Input id="notification-endpoint">
+        <wps:Data>http://115.146.93.218:8080/iddss-service</wps:Data>
+    </wps:Input>
+    <wps:Input id="sos-endpoint">
+        <wps:Data>http://sensorweb.demo.52north.org/sensorwebtestbed/service</wps:Data>
+    </wps:Input>
+    <wps:Input id="pox-getobservation-template">
+        <wps:Data mimeType="text/xml" schema="http://schemas.opengis.net/sos/2.0/sosGetObservation.xsd">
+            <sos:GetObservation xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
+                <sos:procedure>ws2500</sos:procedure>
+                <sos:observedProperty>AirTemperature</sos:observedProperty>
+                <sos:featureOfInterest>ELV-WS2500</sos:featureOfInterest>
+                <sos:responseFormat>http://www.opengis.net/om/2.0</sos:responseFormat>
+            </sos:GetObservation>
+        </wps:Data>
+    </wps:Input>
+    <wps:Input id="kvp-getobservation-template">
+        <wps:Data>http://sensorweb.demo.52north.org/sensorwebtestbed/service?service=SOS&amp;version=2.0.0&amp;request=GetObservation&amp;offering=ws2500&amp;observedProperty=AirTemperature&amp;procedure=ws2500&amp;featureOfInterest=ELV-WS2500</wps:Data>
+    </wps:Input>
+    <wps:Output id="notification-endpoint" transmission="reference"/>
+</wps:Execute>
